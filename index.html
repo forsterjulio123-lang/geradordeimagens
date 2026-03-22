@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎨 Gerador de Artes D&D</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://js.puter.com/v2/"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Crimson Text',serif;background:#12101c;color:#e0d8c8;min-height:100vh;padding:1rem 1rem 3rem}
 h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.3rem,4vw,1.9rem);margin:1rem 0 .3rem;text-shadow:0 0 20px rgba(212,168,48,.3)}
-.sub{text-align:center;color:#908070;font-size:.9rem;margin-bottom:.3rem}
-.badge{text-align:center;margin-bottom:1.2rem}
-.badge span{display:inline-block;padding:.3rem 1rem;border-radius:20px;background:linear-gradient(135deg,#50a838,#2a8018);color:#fff;font-family:'Cinzel',serif;font-size:.65rem;font-weight:700}
-.sec{font-family:'Cinzel',serif;font-size:.8rem;color:#d4a830;margin:1rem 0 .4rem;text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.sub{text-align:center;color:#908070;font-size:.88rem;margin-bottom:1.2rem}
+.sec{font-family:'Cinzel',serif;font-size:.78rem;color:#d4a830;margin:1rem 0 .4rem;text-transform:uppercase;letter-spacing:.06em;text-align:center}
 .tags{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-bottom:.6rem}
 .tag{padding:.3rem .65rem;font-family:'Cinzel',serif;font-size:.64rem;border:1.5px solid #3a3050;border-radius:20px;background:#1e1a2e;color:#908070;cursor:pointer;transition:all .25s;user-select:none}
 .tag:hover{border-color:#d4a830;color:#e0d8c8}
@@ -28,28 +27,28 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
 .btn:hover{border-color:#d4a830}
 .btn.go{background:linear-gradient(135deg,#d4a830,#a88420);color:#111;border-color:#d4a830}
 .btn.stop{border-color:#c04040;color:#c04040;display:none}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
 .card{background:#1e1a2e;border:2px solid #3a3050;border-radius:8px;overflow:hidden;transition:all .3s}
 .card:hover{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.3);transform:translateY(-2px)}
-.card.now{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.4)}
-.card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#0a0812}
-.card .ph{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0812;font-size:1.5rem;color:#3a3050}
+.card.now{border-color:#d4a830;box-shadow:0 0 20px rgba(212,168,48,.5)}
+.card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#0a0812}
+.card .ph{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#0a0812;font-size:1.3rem;color:#3a3050;flex-direction:column;gap:.3rem}
+.card .ph small{font-size:.65rem;color:#4a3860}
 .card .info{padding:.35rem .5rem;font-family:'Cinzel',serif;font-size:.6rem;color:#d4a830;text-align:center}
 .card .acts{display:flex;gap:.3rem;padding:0 .5rem .4rem;justify-content:center}
-.card .acts a,.card .acts button{padding:.2rem .5rem;font-size:.58rem;font-family:'Cinzel',serif;border:1px solid #3a3050;border-radius:4px;background:#12101c;color:#e0d8c8;cursor:pointer;transition:all .2s;text-decoration:none}
-.card .acts a:hover,.card .acts button:hover{border-color:#d4a830;color:#d4a830}
+.card .acts button{padding:.2rem .6rem;font-size:.58rem;font-family:'Cinzel',serif;border:1px solid #3a3050;border-radius:4px;background:#12101c;color:#e0d8c8;cursor:pointer;transition:all .2s}
+.card .acts button:hover{border-color:#d4a830;color:#d4a830}
 .msg{text-align:center;color:#908070;font-size:.85rem;margin:1rem 0;font-style:italic}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;animation:spin 1s linear infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .pulsing{animation:pulse 1.5s ease-in-out infinite}
-@media(max-width:600px){.gallery{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+@media(max-width:600px){.gallery{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
 </style>
 </head>
 <body>
 <h1>🎨 Gerador de Artes D&D</h1>
-<p class="sub">Retratos com IA — para a Forja de Heróis</p>
-<div class="badge"><span>✅ GRATUITO — SEM API KEY</span></div>
+<p class="sub">Retratos com IA · Powered by Puter.js · 100% Gratuito</p>
 
 <div class="sec">🎨 Estilo</div>
 <div class="styles" id="stys"></div>
@@ -67,52 +66,52 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
   <button class="btn" onclick="allOn()">✅ Tudo</button>
   <button class="btn" onclick="allOff()">❌ Limpar</button>
   <button class="btn go" id="goBtn" onclick="gerar()">🚀 Gerar</button>
-  <button class="btn stop" id="stopBtn" onclick="stop=true">⏹ Parar</button>
+  <button class="btn stop" id="stopBtn" onclick="stopFlag=true">⏹ Parar</button>
 </div>
 <div id="status" class="msg"></div>
 <div class="gallery" id="gallery"></div>
 
 <script>
 const R=[
-  {id:'humano',n:'Humano',i:'🧑',v:'human brown hair'},
-  {id:'elfo',n:'Elfo',i:'🧝',v:'elf pointed ears golden hair'},
-  {id:'anao',n:'Anão',i:'⛏️',v:'dwarf stocky braided beard'},
-  {id:'halfling',n:'Halfling',i:'🍀',v:'halfling small curly hair'},
-  {id:'tiefling',n:'Tiefling',i:'😈',v:'tiefling red skin horns glowing eyes tail'},
-  {id:'draconato',n:'Draconato',i:'🐉',v:'dragonborn scaled skin dragon snout'},
-  {id:'gnomo',n:'Gnomo',i:'🧙',v:'gnome tiny big eyes wild hair'},
-  {id:'meio-elfo',n:'Meio-Elfo',i:'🌿',v:'half-elf pointed ears graceful'},
-  {id:'meio-orc',n:'Meio-Orc',i:'💪',v:'half-orc green skin tusks muscular'},
-  {id:'orc',n:'Orc',i:'🪓',v:'orc green skin large tusks fierce'},
-  {id:'aasimar',n:'Aasimar',i:'👼',v:'aasimar celestial glowing eyes halo'},
-  {id:'goliath',n:'Goliath',i:'🏔️',v:'goliath gray skin bald tribal tattoos'},
+  {id:'humano',n:'Humano',i:'🧑',v:'human, brown hair, fair skin'},
+  {id:'elfo',n:'Elfo',i:'🧝',v:'elf, long pointed ears, golden hair, pale skin'},
+  {id:'anao',n:'Anão',i:'⛏️',v:'dwarf, short stocky, thick braided beard'},
+  {id:'halfling',n:'Halfling',i:'🍀',v:'halfling, very small, curly hair, rosy cheeks'},
+  {id:'tiefling',n:'Tiefling',i:'😈',v:'tiefling, red-purple skin, curved horns, glowing yellow eyes, tail'},
+  {id:'draconato',n:'Draconato',i:'🐉',v:'dragonborn, green scaled skin, dragon snout, no hair'},
+  {id:'gnomo',n:'Gnomo',i:'🧙',v:'gnome, tiny, big curious eyes, wild spiky hair'},
+  {id:'meio-elfo',n:'Meio-Elfo',i:'🌿',v:'half-elf, slightly pointed ears, graceful'},
+  {id:'meio-orc',n:'Meio-Orc',i:'💪',v:'half-orc, green skin, small tusks, muscular, scarred'},
+  {id:'orc',n:'Orc',i:'🪓',v:'orc, deep green skin, large tusks, tribal war paint'},
+  {id:'aasimar',n:'Aasimar',i:'👼',v:'aasimar, celestial, glowing golden eyes, subtle halo'},
+  {id:'goliath',n:'Goliath',i:'🏔️',v:'goliath, towering, gray skin, bald, tribal tattoos'},
 ];
 const C=[
-  {id:'barbaro',n:'Bárbaro',i:'🪓',v:'barbarian fur armor great axe'},
-  {id:'bardo',n:'Bardo',i:'🎵',v:'bard elegant clothing lute'},
-  {id:'clerigo',n:'Clérigo',i:'✝️',v:'cleric holy vestments divine light'},
-  {id:'druida',n:'Druida',i:'🌿',v:'druid leaf robes wooden staff'},
-  {id:'guerreiro',n:'Guerreiro',i:'⚔️',v:'fighter plate armor sword shield'},
-  {id:'monge',n:'Monge',i:'👊',v:'monk robes martial arts ki energy'},
-  {id:'paladino',n:'Paladino',i:'🛡️',v:'paladin shining armor holy sword'},
-  {id:'ranger',n:'Ranger',i:'🏹',v:'ranger leather armor longbow cloak'},
-  {id:'ladino',n:'Ladino',i:'🗡️',v:'rogue dark leather daggers hood'},
-  {id:'feiticeiro',n:'Feiticeiro',i:'✨',v:'sorcerer arcane energy magic robes'},
-  {id:'bruxo',n:'Bruxo',i:'🔮',v:'warlock dark robes eldritch energy'},
-  {id:'mago',n:'Mago',i:'📖',v:'wizard robes pointed hat spellbook staff'},
+  {id:'barbaro',n:'Bárbaro',i:'🪓',v:'barbarian warrior, fur armor, great axe, wild hair'},
+  {id:'bardo',n:'Bardo',i:'🎵',v:'bard, elegant clothing, feathered hat, lute'},
+  {id:'clerigo',n:'Clérigo',i:'✝️',v:'cleric, holy vestments, divine light, chain mail'},
+  {id:'druida',n:'Druida',i:'🌿',v:'druid, leaf robes, wooden staff with vines'},
+  {id:'guerreiro',n:'Guerreiro',i:'⚔️',v:'fighter, full plate armor, sword and shield'},
+  {id:'monge',n:'Monge',i:'👊',v:'monk, simple robes, martial arts stance, ki energy'},
+  {id:'paladino',n:'Paladino',i:'🛡️',v:'paladin, shining plate armor, holy sword, golden aura'},
+  {id:'ranger',n:'Ranger',i:'🏹',v:'ranger, green leather armor, hooded cloak, longbow'},
+  {id:'ladino',n:'Ladino',i:'🗡️',v:'rogue, dark leather armor, dual daggers, hooded'},
+  {id:'feiticeiro',n:'Feiticeiro',i:'✨',v:'sorcerer, arcane energy from hands, enchanted robes'},
+  {id:'bruxo',n:'Bruxo',i:'🔮',v:'warlock, dark robes, eldritch green energy, grimoire'},
+  {id:'mago',n:'Mago',i:'📖',v:'wizard, ornate robes, pointed hat, spellbook, glowing staff'},
 ];
 const ST=[
-  {id:'fantasy',n:'Fantasia',i:'🖼️',p:'fantasy oil painting dramatic lighting'},
-  {id:'medieval',n:'Medieval',i:'👑',p:'Renaissance portrait painting classical'},
-  {id:'dark',n:'Dark Fantasy',i:'🌑',p:'dark fantasy gritty atmospheric'},
-  {id:'anime',n:'Anime',i:'⭐',p:'anime cel-shading vibrant colors'},
-  {id:'watercolor',n:'Aquarela',i:'💧',p:'watercolor painting soft blending'},
-  {id:'comic',n:'Comic',i:'💥',p:'comic book bold outlines dynamic'},
-  {id:'pixel',n:'Pixel Art',i:'👾',p:'pixel art 32-bit retro game RPG'},
-  {id:'real',n:'Realista',i:'📷',p:'photorealistic cinematic lighting detailed'},
+  {id:'fantasy',n:'Fantasia',i:'🖼️',p:'epic fantasy oil painting, dramatic lighting, rich colors'},
+  {id:'medieval',n:'Medieval',i:'👑',p:'Renaissance portrait painting, classical, Rembrandt lighting'},
+  {id:'dark',n:'Dark Fantasy',i:'🌑',p:'dark fantasy art, gritty, atmospheric, moody lighting'},
+  {id:'anime',n:'Anime',i:'⭐',p:'anime art style, cel-shading, vibrant colors, expressive eyes'},
+  {id:'watercolor',n:'Aquarela',i:'💧',p:'watercolor painting, soft blending, delicate, dreamy'},
+  {id:'comic',n:'Comic',i:'💥',p:'comic book art, bold outlines, dynamic shading, heroic'},
+  {id:'pixel',n:'Pixel Art',i:'👾',p:'pixel art, 32-bit RPG character, retro game style'},
+  {id:'real',n:'Realista',i:'📷',p:'photorealistic, cinematic lighting, hyper-detailed, 8K'},
 ];
 
-let sr=new Set(['humano']),sc=new Set(['guerreiro']),ss='fantasy',sg='male',stop=false;
+let sr=new Set(['humano']),sc=new Set(['guerreiro']),ss='fantasy',sg='male',stopFlag=false,running=false;
 
 function init(){
   document.getElementById('stys').innerHTML=ST.map(s=>`<div class="sty ${s.id===ss?'on':''}" onclick="pickSty('${s.id}',this)"><span class="si">${s.i}</span><span class="sn">${s.n}</span></div>`).join('');
@@ -127,97 +126,83 @@ function updBtn(){const m=sg==='both'?2:1;const t=sr.size*sc.size*m;document.get
 function allOn(){sr=new Set(R.map(x=>x.id));sc=new Set(C.map(x=>x.id));init()}
 function allOff(){sr.clear();sc.clear();init()}
 
-function mkUrl(race,cls,gen,seed){
+function mkPrompt(race,cls,gen){
   const sty=ST.find(s=>s.id===ss);
-  const g=gen==='female'?'female':'male';
-  const p=`${g} ${race.v} ${cls.v} ${sty.p} dark background portrait`;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=768&height=1024&seed=${seed}&model=turbo`;
+  const g=gen==='female'?'female woman':'male man';
+  return `Portrait of a ${g} ${race.v}, ${cls.v}. ${sty.p}. Dark atmospheric background, upper body bust portrait, highly detailed face. No text, no watermark.`;
 }
 
-function tryLoad(url,timeout){
-  return new Promise((ok,fail)=>{
-    const img=new Image();
-    const t=setTimeout(()=>{img.src='';fail('timeout')},timeout);
-    img.onload=()=>{clearTimeout(t);ok(url)};
-    img.onerror=()=>{clearTimeout(t);fail('error')};
-    img.src=url;
-  });
+async function generateImage(prompt){
+  const imgEl = await puter.ai.txt2img(prompt, {model:'dall-e-3'});
+  return imgEl.src;
 }
 
 async function gerar(){
   if(!sr.size||!sc.size){alert('Selecione raça e classe');return}
-  stop=false;
+  if(running)return;
+  running=true;stopFlag=false;
   document.getElementById('goBtn').style.display='none';
   document.getElementById('stopBtn').style.display='inline-block';
-  const gal=document.getElementById('gallery');
-  gal.innerHTML='';
+
+  const gal=document.getElementById('gallery');gal.innerHTML='';
   const gs=sg==='both'?['male','female']:[sg];
-  const sym={male:'♂',female:'♀'};
-  const nm={male:'Masc.',female:'Fem.'};
+  const sym={male:'♂',female:'♀'},nm={male:'Masc.',female:'Fem.'};
 
   const jobs=[];
   for(const gen of gs)for(const rid of sr)for(const cid of sc)
     jobs.push({rid,cid,gen,r:R.find(x=>x.id===rid),c:C.find(x=>x.id===cid)});
 
+  // Create placeholders
   for(const j of jobs){
     const k=`${j.rid}_${j.cid}_${j.gen}`;
     const d=document.createElement('div');d.className='card';d.id='c_'+k;
-    d.innerHTML=`<div class="ph" id="ph_${k}">⏳</div>
+    d.innerHTML=`<div class="ph" id="ph_${k}">⏳<small>Na fila</small></div>
       <div class="info">${j.r.i} ${j.r.n} · ${j.c.i} ${j.c.n} · ${sym[j.gen]} ${nm[j.gen]}</div>
-      <div class="acts"><a id="dl_${k}" href="#" target="_blank">💾</a><button onclick="redo('${k}','${j.rid}','${j.cid}','${j.gen}')">🔄</button></div>`;
+      <div class="acts"><button onclick="redo('${j.rid}','${j.cid}','${j.gen}')">🔄 Refazer</button></div>`;
     gal.appendChild(d);
   }
 
   let done=0,ok=0,er=0;
   for(const j of jobs){
-    if(stop)break;
+    if(stopFlag)break;
     const k=`${j.rid}_${j.cid}_${j.gen}`;
-    const card=document.getElementById('c_'+k);
-    card.classList.add('now');
+    const card=document.getElementById('c_'+k);card.classList.add('now');
     const ph=document.getElementById('ph_'+k);
-    ph.innerHTML='<span class="spin">🎨</span>';
-    ph.classList.add('pulsing');
-    document.getElementById('status').innerHTML=`<span class="spin">🎨</span> ${done+1}/${jobs.length}: ${j.r.n} ${j.c.n} ${sym[j.gen]}`;
+    ph.innerHTML='<span class="spin">🎨</span><small>Gerando...</small>';ph.classList.add('pulsing');
+    document.getElementById('status').innerHTML=`<span class="spin">🎨</span> Gerando ${done+1}/${jobs.length}: ${j.r.n} ${j.c.n} ${sym[j.gen]}...`;
 
-    const seed=Math.floor(Math.random()*999999);
-    const url=mkUrl(j.r,j.c,j.gen,seed);
-    let success=false;
-
-    for(let attempt=0;attempt<3&&!success;attempt++){
-      try{
-        await tryLoad(url+(attempt>0?'&retry='+attempt:''),45000);
-        const img=document.createElement('img');img.src=url+(attempt>0?'&retry='+attempt:'');
-        ph.replaceWith(img);
-        document.getElementById('dl_'+k).href=url;
-        ok++;success=true;
-      }catch(e){
-        if(attempt===2){ph.classList.remove('pulsing');ph.textContent='❌';ph.style.color='#c04040';er++}
-        else{await new Promise(r=>setTimeout(r,3000))}
-      }
+    try{
+      const prompt=mkPrompt(j.r,j.c,j.gen);
+      const src=await generateImage(prompt);
+      const img=document.createElement('img');img.src=src;
+      ph.replaceWith(img);
+      ok++;
+    }catch(e){
+      console.error(e);
+      ph.classList.remove('pulsing');ph.innerHTML='❌<small>'+e.message?.slice(0,40)+'</small>';ph.style.color='#c04040';
+      er++;
     }
-    card.classList.remove('now');
-    done++;
-    if(!stop&&done<jobs.length)await new Promise(r=>setTimeout(r,2000));
+    card.classList.remove('now');done++;
+    if(!stopFlag&&done<jobs.length)await new Promise(r=>setTimeout(r,1000));
   }
 
+  running=false;
   document.getElementById('goBtn').style.display='inline-block';
   document.getElementById('stopBtn').style.display='none';
-  document.getElementById('status').innerHTML=stop?`⏹ Parado. ${ok}✅ ${er}❌`:`✅ Pronto! ${ok} geradas${er?', '+er+' erros':''}`;
+  document.getElementById('status').innerHTML=stopFlag?`⏹ Parado. ${ok}✅ ${er}❌`:`✅ Pronto! ${ok} geradas${er?', '+er+' erros':''}`;
 }
 
-async function redo(k,rid,cid,gen){
+async function redo(rid,cid,gen){
+  const k=`${rid}_${cid}_${gen}`;
   const r=R.find(x=>x.id===rid),c=C.find(x=>x.id===cid);
   const card=document.getElementById('c_'+k);
   const old=card.querySelector('img')||card.querySelector('.ph');
-  const ph=document.createElement('div');ph.className='ph pulsing';ph.innerHTML='<span class="spin">🎨</span>';
+  const ph=document.createElement('div');ph.className='ph pulsing';ph.innerHTML='<span class="spin">🎨</span><small>Gerando...</small>';
   old.replaceWith(ph);
-  const seed=Math.floor(Math.random()*999999);
-  const url=mkUrl(r,c,gen,seed);
   try{
-    await tryLoad(url,45000);
-    const img=document.createElement('img');img.src=url;ph.replaceWith(img);
-    document.getElementById('dl_'+k).href=url;
-  }catch(e){ph.classList.remove('pulsing');ph.textContent='❌';ph.style.color='#c04040'}
+    const src=await generateImage(mkPrompt(r,c,gen));
+    const img=document.createElement('img');img.src=src;ph.replaceWith(img);
+  }catch(e){ph.classList.remove('pulsing');ph.innerHTML='❌';ph.style.color='#c04040'}
 }
 
 init();
