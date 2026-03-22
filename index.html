@@ -27,15 +27,13 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
 .btn{padding:.5rem 1.1rem;font-family:'Cinzel',serif;font-size:.72rem;font-weight:700;border:2px solid #3a3050;border-radius:6px;background:#1e1a2e;color:#e0d8c8;cursor:pointer;transition:all .3s}
 .btn:hover{border-color:#d4a830}
 .btn.go{background:linear-gradient(135deg,#d4a830,#a88420);color:#111;border-color:#d4a830}
-.btn.go:hover{box-shadow:0 0 20px rgba(212,168,48,.4)}
 .btn.stop{border-color:#c04040;color:#c04040;display:none}
-.btn.stop:hover{background:#c04040;color:#fff}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem}
 .card{background:#1e1a2e;border:2px solid #3a3050;border-radius:8px;overflow:hidden;transition:all .3s}
 .card:hover{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.3);transform:translateY(-2px)}
-.card.active{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.4)}
+.card.now{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.4)}
 .card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#0a0812}
-.card .placeholder{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0812;font-size:1.5rem;color:#3a3050}
+.card .ph{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0812;font-size:1.5rem;color:#3a3050}
 .card .info{padding:.35rem .5rem;font-family:'Cinzel',serif;font-size:.6rem;color:#d4a830;text-align:center}
 .card .acts{display:flex;gap:.3rem;padding:0 .5rem .4rem;justify-content:center}
 .card .acts a,.card .acts button{padding:.2rem .5rem;font-size:.58rem;font-family:'Cinzel',serif;border:1px solid #3a3050;border-radius:4px;background:#12101c;color:#e0d8c8;cursor:pointer;transition:all .2s;text-decoration:none}
@@ -43,85 +41,78 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
 .msg{text-align:center;color:#908070;font-size:.85rem;margin:1rem 0;font-style:italic}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;animation:spin 1s linear infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .pulsing{animation:pulse 1.5s ease-in-out infinite}
 @media(max-width:600px){.gallery{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
 </style>
 </head>
 <body>
-
 <h1>🎨 Gerador de Artes D&D</h1>
 <p class="sub">Retratos com IA — para a Forja de Heróis</p>
-<div class="badge"><span>✅ GRATUITO — SEM API KEY — SEM LIMITES</span></div>
+<div class="badge"><span>✅ GRATUITO — SEM API KEY</span></div>
 
 <div class="sec">🎨 Estilo</div>
 <div class="styles" id="stys"></div>
-
 <div class="sec">👤 Gênero</div>
-<div class="tags" id="genTags">
+<div class="tags">
   <div class="tag on" onclick="pickGen('male',this)" data-g="male">♂️ Masculino</div>
   <div class="tag" onclick="pickGen('female',this)" data-g="female">♀️ Feminino</div>
   <div class="tag" onclick="pickGen('both',this)" data-g="both">⚔️ Ambos</div>
 </div>
-
 <div class="sec">🧬 Raças</div>
 <div class="tags" id="racas"></div>
-
 <div class="sec">⚔️ Classes</div>
 <div class="tags" id="classes"></div>
-
 <div class="ctrls">
   <button class="btn" onclick="allOn()">✅ Tudo</button>
   <button class="btn" onclick="allOff()">❌ Limpar</button>
   <button class="btn go" id="goBtn" onclick="gerar()">🚀 Gerar</button>
-  <button class="btn stop" id="stopBtn" onclick="parar()">⏹ Parar</button>
+  <button class="btn stop" id="stopBtn" onclick="stop=true">⏹ Parar</button>
 </div>
-
 <div id="status" class="msg"></div>
 <div class="gallery" id="gallery"></div>
 
 <script>
 const R=[
   {id:'humano',n:'Humano',i:'🧑',v:'human brown hair'},
-  {id:'elfo',n:'Elfo',i:'🧝',v:'elf pointed ears golden hair pale skin'},
+  {id:'elfo',n:'Elfo',i:'🧝',v:'elf pointed ears golden hair'},
   {id:'anao',n:'Anão',i:'⛏️',v:'dwarf stocky braided beard'},
-  {id:'halfling',n:'Halfling',i:'🍀',v:'halfling small curly hair rosy cheeks'},
-  {id:'tiefling',n:'Tiefling',i:'😈',v:'tiefling red skin curved horns glowing eyes tail'},
-  {id:'draconato',n:'Draconato',i:'🐉',v:'dragonborn scaled skin dragon snout no hair'},
-  {id:'gnomo',n:'Gnomo',i:'🧙',v:'gnome tiny big eyes wild hair big nose'},
-  {id:'meio-elfo',n:'Meio-Elfo',i:'🌿',v:'half-elf slightly pointed ears graceful'},
-  {id:'meio-orc',n:'Meio-Orc',i:'💪',v:'half-orc green skin tusks muscular scarred'},
-  {id:'orc',n:'Orc',i:'🪓',v:'orc green skin large tusks war paint fierce'},
-  {id:'aasimar',n:'Aasimar',i:'👼',v:'aasimar celestial glowing golden eyes halo'},
-  {id:'goliath',n:'Goliath',i:'🏔️',v:'goliath towering gray skin bald tribal tattoos'},
+  {id:'halfling',n:'Halfling',i:'🍀',v:'halfling small curly hair'},
+  {id:'tiefling',n:'Tiefling',i:'😈',v:'tiefling red skin horns glowing eyes tail'},
+  {id:'draconato',n:'Draconato',i:'🐉',v:'dragonborn scaled skin dragon snout'},
+  {id:'gnomo',n:'Gnomo',i:'🧙',v:'gnome tiny big eyes wild hair'},
+  {id:'meio-elfo',n:'Meio-Elfo',i:'🌿',v:'half-elf pointed ears graceful'},
+  {id:'meio-orc',n:'Meio-Orc',i:'💪',v:'half-orc green skin tusks muscular'},
+  {id:'orc',n:'Orc',i:'🪓',v:'orc green skin large tusks fierce'},
+  {id:'aasimar',n:'Aasimar',i:'👼',v:'aasimar celestial glowing eyes halo'},
+  {id:'goliath',n:'Goliath',i:'🏔️',v:'goliath gray skin bald tribal tattoos'},
 ];
 const C=[
   {id:'barbaro',n:'Bárbaro',i:'🪓',v:'barbarian fur armor great axe'},
-  {id:'bardo',n:'Bardo',i:'🎵',v:'bard elegant clothing lute feathered hat'},
-  {id:'clerigo',n:'Clérigo',i:'✝️',v:'cleric holy vestments divine light chain mail'},
-  {id:'druida',n:'Druida',i:'🌿',v:'druid leaf robes wooden staff vines'},
+  {id:'bardo',n:'Bardo',i:'🎵',v:'bard elegant clothing lute'},
+  {id:'clerigo',n:'Clérigo',i:'✝️',v:'cleric holy vestments divine light'},
+  {id:'druida',n:'Druida',i:'🌿',v:'druid leaf robes wooden staff'},
   {id:'guerreiro',n:'Guerreiro',i:'⚔️',v:'fighter plate armor sword shield'},
-  {id:'monge',n:'Monge',i:'👊',v:'monk robes martial arts stance ki energy'},
-  {id:'paladino',n:'Paladino',i:'🛡️',v:'paladin shining armor holy sword golden aura'},
-  {id:'ranger',n:'Ranger',i:'🏹',v:'ranger leather armor hooded cloak longbow'},
-  {id:'ladino',n:'Ladino',i:'🗡️',v:'rogue dark leather daggers hood shadows'},
-  {id:'feiticeiro',n:'Feiticeiro',i:'✨',v:'sorcerer arcane energy robes magic runes'},
-  {id:'bruxo',n:'Bruxo',i:'🔮',v:'warlock dark robes eldritch energy grimoire'},
-  {id:'mago',n:'Mago',i:'📖',v:'wizard robes pointed hat spellbook staff crystal orb'},
+  {id:'monge',n:'Monge',i:'👊',v:'monk robes martial arts ki energy'},
+  {id:'paladino',n:'Paladino',i:'🛡️',v:'paladin shining armor holy sword'},
+  {id:'ranger',n:'Ranger',i:'🏹',v:'ranger leather armor longbow cloak'},
+  {id:'ladino',n:'Ladino',i:'🗡️',v:'rogue dark leather daggers hood'},
+  {id:'feiticeiro',n:'Feiticeiro',i:'✨',v:'sorcerer arcane energy magic robes'},
+  {id:'bruxo',n:'Bruxo',i:'🔮',v:'warlock dark robes eldritch energy'},
+  {id:'mago',n:'Mago',i:'📖',v:'wizard robes pointed hat spellbook staff'},
 ];
 const ST=[
   {id:'fantasy',n:'Fantasia',i:'🖼️',p:'fantasy oil painting dramatic lighting'},
-  {id:'medieval',n:'Medieval',i:'👑',p:'Renaissance portrait oil painting classical'},
-  {id:'dark',n:'Dark Fantasy',i:'🌑',p:'dark fantasy gritty atmospheric lighting'},
-  {id:'anime',n:'Anime',i:'⭐',p:'anime art style cel-shading vibrant colors'},
-  {id:'watercolor',n:'Aquarela',i:'💧',p:'watercolor painting soft blending dreamy'},
-  {id:'comic',n:'Comic',i:'💥',p:'comic book bold outlines dynamic shading'},
-  {id:'pixel',n:'Pixel Art',i:'👾',p:'pixel art 32-bit RPG retro game'},
+  {id:'medieval',n:'Medieval',i:'👑',p:'Renaissance portrait painting classical'},
+  {id:'dark',n:'Dark Fantasy',i:'🌑',p:'dark fantasy gritty atmospheric'},
+  {id:'anime',n:'Anime',i:'⭐',p:'anime cel-shading vibrant colors'},
+  {id:'watercolor',n:'Aquarela',i:'💧',p:'watercolor painting soft blending'},
+  {id:'comic',n:'Comic',i:'💥',p:'comic book bold outlines dynamic'},
+  {id:'pixel',n:'Pixel Art',i:'👾',p:'pixel art 32-bit retro game RPG'},
   {id:'real',n:'Realista',i:'📷',p:'photorealistic cinematic lighting detailed'},
 ];
 
-let sr=new Set(['humano']), sc=new Set(['guerreiro']), ss='fantasy', sg='male';
-let running=false, stopFlag=false;
+let sr=new Set(['humano']),sc=new Set(['guerreiro']),ss='fantasy',sg='male',stop=false;
 
 function init(){
   document.getElementById('stys').innerHTML=ST.map(s=>`<div class="sty ${s.id===ss?'on':''}" onclick="pickSty('${s.id}',this)"><span class="si">${s.i}</span><span class="sn">${s.n}</span></div>`).join('');
@@ -136,158 +127,97 @@ function updBtn(){const m=sg==='both'?2:1;const t=sr.size*sc.size*m;document.get
 function allOn(){sr=new Set(R.map(x=>x.id));sc=new Set(C.map(x=>x.id));init()}
 function allOff(){sr.clear();sc.clear();init()}
 
-function mkPrompt(race,cls,gen){
+function mkUrl(race,cls,gen,seed){
   const sty=ST.find(s=>s.id===ss);
   const g=gen==='female'?'female':'male';
-  return `${g} ${race.v} ${cls.v}, ${sty.p}, dark background, portrait bust, detailed face`;
-}
-function mkUrl(prompt,seed){
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${seed}&nologo=true`;
+  const p=`${g} ${race.v} ${cls.v} ${sty.p} dark background portrait`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=768&height=1024&seed=${seed}&model=turbo`;
 }
 
-// Load image with retry
-function loadImage(url, maxRetries=2){
-  return new Promise((resolve,reject)=>{
-    let attempts=0;
-    function tryLoad(){
-      attempts++;
-      const img=new Image();
-      img.crossOrigin='anonymous';
-      const timer=setTimeout(()=>{
-        img.src='';
-        if(attempts<=maxRetries){
-          tryLoad();
-        } else {
-          reject(new Error('timeout'));
-        }
-      }, 30000); // 30s timeout per attempt
-      img.onload=()=>{clearTimeout(timer);resolve(url)};
-      img.onerror=()=>{
-        clearTimeout(timer);
-        if(attempts<=maxRetries){
-          setTimeout(tryLoad, 2000);
-        } else {
-          reject(new Error('failed'));
-        }
-      };
-      img.src=url;
-    }
-    tryLoad();
+function tryLoad(url,timeout){
+  return new Promise((ok,fail)=>{
+    const img=new Image();
+    const t=setTimeout(()=>{img.src='';fail('timeout')},timeout);
+    img.onload=()=>{clearTimeout(t);ok(url)};
+    img.onerror=()=>{clearTimeout(t);fail('error')};
+    img.src=url;
   });
 }
 
 async function gerar(){
-  if(sr.size===0||sc.size===0){alert('Selecione ao menos 1 raça e 1 classe');return}
-  if(running)return;
-  running=true;stopFlag=false;
+  if(!sr.size||!sc.size){alert('Selecione raça e classe');return}
+  stop=false;
   document.getElementById('goBtn').style.display='none';
   document.getElementById('stopBtn').style.display='inline-block';
-
   const gal=document.getElementById('gallery');
   gal.innerHTML='';
-  const genders=sg==='both'?['male','female']:[sg];
-  const gSym={male:'♂',female:'♀'};
-  const gNome={male:'Masc.',female:'Fem.'};
+  const gs=sg==='both'?['male','female']:[sg];
+  const sym={male:'♂',female:'♀'};
+  const nm={male:'Masc.',female:'Fem.'};
 
-  // Build job list
   const jobs=[];
-  for(const gen of genders)
-    for(const rid of sr)
-      for(const cid of sc)
-        jobs.push({rid,cid,gen,race:R.find(x=>x.id===rid),cls:C.find(x=>x.id===cid)});
+  for(const gen of gs)for(const rid of sr)for(const cid of sc)
+    jobs.push({rid,cid,gen,r:R.find(x=>x.id===rid),c:C.find(x=>x.id===cid)});
 
-  // Create placeholder cards
   for(const j of jobs){
-    const key=`${j.rid}_${j.cid}_${j.gen}`;
-    const div=document.createElement('div');
-    div.className='card';
-    div.id='c_'+key;
-    div.innerHTML=`
-      <div class="placeholder" id="ph_${key}">⏳</div>
-      <div class="info">${j.race.i} ${j.race.n} · ${j.cls.i} ${j.cls.n} · ${gSym[j.gen]} ${gNome[j.gen]}</div>
-      <div class="acts">
-        <a id="dl_${key}" href="#" target="_blank">💾 Salvar</a>
-        <button onclick="redo('${key}','${j.rid}','${j.cid}','${j.gen}')">🔄 Refazer</button>
-      </div>`;
-    gal.appendChild(div);
+    const k=`${j.rid}_${j.cid}_${j.gen}`;
+    const d=document.createElement('div');d.className='card';d.id='c_'+k;
+    d.innerHTML=`<div class="ph" id="ph_${k}">⏳</div>
+      <div class="info">${j.r.i} ${j.r.n} · ${j.c.i} ${j.c.n} · ${sym[j.gen]} ${nm[j.gen]}</div>
+      <div class="acts"><a id="dl_${k}" href="#" target="_blank">💾</a><button onclick="redo('${k}','${j.rid}','${j.cid}','${j.gen}')">🔄</button></div>`;
+    gal.appendChild(d);
   }
 
-  const total=jobs.length;
-  let done=0, ok=0, errs=0;
-
-  // Process ONE AT A TIME
+  let done=0,ok=0,er=0;
   for(const j of jobs){
-    if(stopFlag)break;
-    const key=`${j.rid}_${j.cid}_${j.gen}`;
-    const card=document.getElementById('c_'+key);
-    card.classList.add('active');
-    const ph=document.getElementById('ph_'+key);
+    if(stop)break;
+    const k=`${j.rid}_${j.cid}_${j.gen}`;
+    const card=document.getElementById('c_'+k);
+    card.classList.add('now');
+    const ph=document.getElementById('ph_'+k);
     ph.innerHTML='<span class="spin">🎨</span>';
     ph.classList.add('pulsing');
-
-    document.getElementById('status').innerHTML=`<span class="spin">🎨</span> Gerando ${done+1}/${total}: ${j.race.n} ${j.cls.n} ${gSym[j.gen]}...`;
+    document.getElementById('status').innerHTML=`<span class="spin">🎨</span> ${done+1}/${jobs.length}: ${j.r.n} ${j.c.n} ${sym[j.gen]}`;
 
     const seed=Math.floor(Math.random()*999999);
-    const prompt=mkPrompt(j.race,j.cls,j.gen);
-    const url=mkUrl(prompt,seed);
+    const url=mkUrl(j.r,j.c,j.gen,seed);
+    let success=false;
 
-    try{
-      await loadImage(url);
-      // Success - replace placeholder with image
-      const img=document.createElement('img');
-      img.src=url;
-      img.alt=`${j.race.n} ${j.cls.n}`;
-      ph.replaceWith(img);
-      document.getElementById('dl_'+key).href=url;
-      ok++;
-    }catch(e){
-      ph.classList.remove('pulsing');
-      ph.innerHTML='❌';
-      ph.style.color='#c04040';
-      errs++;
+    for(let attempt=0;attempt<3&&!success;attempt++){
+      try{
+        await tryLoad(url+(attempt>0?'&retry='+attempt:''),45000);
+        const img=document.createElement('img');img.src=url+(attempt>0?'&retry='+attempt:'');
+        ph.replaceWith(img);
+        document.getElementById('dl_'+k).href=url;
+        ok++;success=true;
+      }catch(e){
+        if(attempt===2){ph.classList.remove('pulsing');ph.textContent='❌';ph.style.color='#c04040';er++}
+        else{await new Promise(r=>setTimeout(r,3000))}
+      }
     }
-    card.classList.remove('active');
+    card.classList.remove('now');
     done++;
-
-    // Small pause between images to not overwhelm the API
-    if(!stopFlag && done<total) await new Promise(r=>setTimeout(r,1500));
+    if(!stop&&done<jobs.length)await new Promise(r=>setTimeout(r,2000));
   }
 
-  running=false;
   document.getElementById('goBtn').style.display='inline-block';
   document.getElementById('stopBtn').style.display='none';
-  document.getElementById('status').innerHTML=stopFlag
-    ?`⏹ Parado. ${ok} geradas, ${errs} erros.`
-    :`✅ Concluído! ${ok} geradas${errs>0?', '+errs+' erros':''}`;
+  document.getElementById('status').innerHTML=stop?`⏹ Parado. ${ok}✅ ${er}❌`:`✅ Pronto! ${ok} geradas${er?', '+er+' erros':''}`;
 }
 
-function parar(){stopFlag=true}
-
-async function redo(key,rid,cid,gen){
-  const race=R.find(x=>x.id===rid), cls=C.find(x=>x.id===cid);
+async function redo(k,rid,cid,gen){
+  const r=R.find(x=>x.id===rid),c=C.find(x=>x.id===cid);
+  const card=document.getElementById('c_'+k);
+  const old=card.querySelector('img')||card.querySelector('.ph');
+  const ph=document.createElement('div');ph.className='ph pulsing';ph.innerHTML='<span class="spin">🎨</span>';
+  old.replaceWith(ph);
   const seed=Math.floor(Math.random()*999999);
-  const prompt=mkPrompt(race,cls,gen);
-  const url=mkUrl(prompt,seed);
-  const card=document.getElementById('c_'+key);
-  const existing=card.querySelector('img')||card.querySelector('.placeholder');
-
-  // Show loading
-  const ph=document.createElement('div');
-  ph.className='placeholder pulsing';
-  ph.innerHTML='<span class="spin">🎨</span>';
-  existing.replaceWith(ph);
-
+  const url=mkUrl(r,c,gen,seed);
   try{
-    await loadImage(url);
-    const img=document.createElement('img');
-    img.src=url;
-    ph.replaceWith(img);
-    document.getElementById('dl_'+key).href=url;
-  }catch(e){
-    ph.classList.remove('pulsing');
-    ph.innerHTML='❌';
-    ph.style.color='#c04040';
-  }
+    await tryLoad(url,45000);
+    const img=document.createElement('img');img.src=url;ph.replaceWith(img);
+    document.getElementById('dl_'+k).href=url;
+  }catch(e){ph.classList.remove('pulsing');ph.textContent='❌';ph.style.color='#c04040'}
 }
 
 init();
