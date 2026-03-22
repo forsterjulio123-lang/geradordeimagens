@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Gerador de Artes D&D</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Crimson Text',serif;background:#12101c;color:#e0d8c8;min-height:100vh;padding:1rem}
+h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:1.8rem;margin:1rem 0 .3rem;text-shadow:0 0 20px rgba(212,168,48,.3)}
+.sub{text-align:center;color:#908070;font-size:.9rem;margin-bottom:.3rem}
+.badge{text-align:center;margin-bottom:1.5rem}
+.badge span{display:inline-block;padding:.3rem 1rem;border-radius:20px;background:linear-gradient(135deg,#50a838,#2a8018);color:#fff;font-family:'Cinzel',serif;font-size:.7rem;font-weight:700}
+.sec{font-family:'Cinzel',serif;font-size:.85rem;color:#d4a830;margin:1.2rem 0 .5rem;text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-bottom:.8rem}
+.tag{padding:.35rem .7rem;font-family:'Cinzel',serif;font-size:.68rem;border:1.5px solid #3a3050;border-radius:20px;background:#1e1a2e;color:#908070;cursor:pointer;transition:all .25s;user-select:none}
+.tag:hover{border-color:#d4a830;color:#e0d8c8}
+.tag.on{border-color:#d4a830;background:rgba(212,168,48,.15);color:#d4a830}
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.5rem;max-width:650px;margin:0 auto .8rem}
+.sty{padding:.5rem;text-align:center;border:2px solid #3a3050;border-radius:6px;background:#1e1a2e;cursor:pointer;transition:all .3s}
+.sty:hover{border-color:#d4a830}
+.sty.on{border-color:#d4a830;box-shadow:0 0 10px rgba(212,168,48,.3);background:rgba(212,168,48,.1)}
+.sty .si{font-size:1.4rem;display:block;margin-bottom:.15rem}
+.sty .sn{font-family:'Cinzel',serif;font-size:.65rem;color:#d4a830}
+.ctrls{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin:1.2rem 0}
+.btn{padding:.55rem 1.3rem;font-family:'Cinzel',serif;font-size:.78rem;font-weight:700;border:2px solid #3a3050;border-radius:6px;background:#1e1a2e;color:#e0d8c8;cursor:pointer;transition:all .3s}
+.btn:hover{border-color:#d4a830;box-shadow:0 0 10px rgba(212,168,48,.3)}
+.btn.go{background:linear-gradient(135deg,#d4a830,#a88420);color:#111;border-color:#d4a830}
+.btn.go:hover{box-shadow:0 0 20px rgba(212,168,48,.4)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
+.card{background:#1e1a2e;border:2px solid #3a3050;border-radius:8px;overflow:hidden;transition:all .3s}
+.card:hover{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.3);transform:translateY(-2px)}
+.card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#0a0812}
+.card .info{padding:.4rem .5rem;font-family:'Cinzel',serif;font-size:.68rem;color:#d4a830;text-align:center}
+.card .acts{display:flex;gap:.3rem;padding:0 .5rem .4rem;justify-content:center}
+.card .acts a,.card .acts button{padding:.2rem .5rem;font-size:.62rem;font-family:'Cinzel',serif;border:1px solid #3a3050;border-radius:4px;background:#12101c;color:#e0d8c8;cursor:pointer;transition:all .2s;text-decoration:none}
+.card .acts a:hover,.card .acts button:hover{border-color:#d4a830;color:#d4a830}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg{text-align:center;color:#908070;font-size:.85rem;margin:1rem 0;font-style:italic}
+@media(max-width:600px){.gallery{grid-template-columns:repeat(auto-fill,minmax(155px,1fr))}.styles{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<h1>🎨 Gerador de Artes D&D</h1>
+<p class="sub">Retratos de personagem com IA — para a Forja de Heróis</p>
+<div class="badge"><span>✅ 100% GRATUITO — SEM API KEY — SEM LIMITES</span></div>
+
+<div class="sec">🎨 Estilo</div>
+<div class="styles" id="stys"></div>
+
+<div class="sec">🧬 Raças</div>
+<div class="tags" id="racas"></div>
+
+<div class="sec">⚔️ Classes</div>
+<div class="tags" id="classes"></div>
+
+<div class="ctrls">
+  <button class="btn" onclick="allOn()">✅ Tudo</button>
+  <button class="btn" onclick="allOff()">❌ Limpar</button>
+  <button class="btn go" id="goBtn" onclick="gerar()">🚀 Gerar Artes</button>
+</div>
+
+<div id="status" class="msg"></div>
+<div class="gallery" id="gallery"></div>
+
+<script>
+const R=[
+  {id:'humano',n:'Humano',i:'🧑',v:'human fair skin brown hair determined expression'},
+  {id:'elfo',n:'Elfo',i:'🧝',v:'elf elegant long pointed ears pale skin golden hair ethereal beauty'},
+  {id:'anao',n:'Anão',i:'⛏️',v:'dwarf stocky short muscular thick braided beard ruddy skin'},
+  {id:'halfling',n:'Halfling',i:'🍀',v:'halfling small cheerful humanoid curly hair rosy cheeks short'},
+  {id:'tiefling',n:'Tiefling',i:'😈',v:'tiefling red-purple skin curved ram horns glowing yellow eyes tail'},
+  {id:'draconato',n:'Draconato',i:'🐉',v:'dragonborn dragon humanoid scaled green skin snout no hair'},
+  {id:'gnomo',n:'Gnomo',i:'🧙',v:'gnome tiny humanoid large curious eyes wild spiky hair big nose'},
+  {id:'meio-elfo',n:'Meio-Elfo',i:'🌿',v:'half-elf slightly pointed ears graceful elven beauty hazel eyes'},
+  {id:'meio-orc',n:'Meio-Orc',i:'💪',v:'half-orc green skin prominent jaw tusks muscular scarred'},
+  {id:'orc',n:'Orc',i:'🪓',v:'orc deep green skin large tusks tribal war paint fierce'},
+  {id:'aasimar',n:'Aasimar',i:'👼',v:'aasimar celestial glowing golden eyes radiant skin subtle halo'},
+  {id:'goliath',n:'Goliath',i:'🏔️',v:'goliath towering gray skin bald dark tribal tattoos giant'},
+];
+const C=[
+  {id:'barbaro',n:'Bárbaro',i:'🪓',v:'barbarian fur armor battle scars great axe wild hair primal rage'},
+  {id:'bardo',n:'Bardo',i:'🎵',v:'bard elegant clothing feathered hat ornate lute charismatic'},
+  {id:'clerigo',n:'Clérigo',i:'✝️',v:'cleric holy vestments divine symbol radiant light chain mail'},
+  {id:'druida',n:'Druida',i:'🌿',v:'druid robes with leaves vines wooden staff glowing crystal'},
+  {id:'guerreiro',n:'Guerreiro',i:'⚔️',v:'fighter full plate armor longsword shield battle-ready'},
+  {id:'monge',n:'Monge',i:'👊',v:'monk flowing robes martial arts stance glowing ki energy fists'},
+  {id:'paladino',n:'Paladino',i:'🛡️',v:'paladin shining plate armor holy greatsword divine golden aura'},
+  {id:'ranger',n:'Ranger',i:'🏹',v:'ranger green leather armor hooded cloak longbow arrows hawk'},
+  {id:'ladino',n:'Ladino',i:'🗡️',v:'rogue dark leather dual daggers deep hood shadows cunning'},
+  {id:'feiticeiro',n:'Feiticeiro',i:'✨',v:'sorcerer arcane energy crackling hands enchanted robes runes'},
+  {id:'bruxo',n:'Bruxo',i:'🔮',v:'warlock dark robes eldritch green energy floating grimoire'},
+  {id:'mago',n:'Mago',i:'📖',v:'wizard ornate robes stars pointed hat spellbook glowing staff'},
+];
+const ST=[
+  {id:'fantasy',n:'Fantasia',i:'🖼️',p:'epic fantasy oil painting dramatic lighting rich colors detailed'},
+  {id:'medieval',n:'Medieval',i:'👑',p:'medieval Renaissance portrait classical oil painting Rembrandt lighting'},
+  {id:'dark',n:'Dark Fantasy',i:'🌑',p:'dark fantasy moody atmospheric lighting gritty detailed Dark Souls'},
+  {id:'anime',n:'Anime',i:'⭐',p:'anime JRPG character vibrant cel-shading expressive eyes'},
+  {id:'watercolor',n:'Aquarela',i:'💧',p:'watercolor painting soft blending delicate brush strokes dreamy'},
+  {id:'comic',n:'Comic',i:'💥',p:'comic book bold ink outlines dynamic shading heroic pose'},
+  {id:'pixel',n:'Pixel Art',i:'👾',p:'pixel art 32-bit RPG character clean pixels retro game'},
+  {id:'real',n:'Realista',i:'📷',p:'photorealistic fantasy hyper-detailed cinematic lighting 8K render'},
+];
+
+let sr=new Set(R.map(x=>x.id)), sc=new Set(C.map(x=>x.id)), ss='fantasy';
+
+function init(){
+  document.getElementById('stys').innerHTML=ST.map(s=>`<div class="sty ${s.id===ss?'on':''}" onclick="pickSty('${s.id}',this)"><span class="si">${s.i}</span><span class="sn">${s.n}</span></div>`).join('');
+  document.getElementById('racas').innerHTML=R.map(r=>`<div class="tag ${sr.has(r.id)?'on':''}" onclick="tog(this,'${r.id}','r')">${r.i} ${r.n}</div>`).join('');
+  document.getElementById('classes').innerHTML=C.map(c=>`<div class="tag ${sc.has(c.id)?'on':''}" onclick="tog(this,'${c.id}','c')">${c.i} ${c.n}</div>`).join('');
+  updBtn();
+}
+function pickSty(id,el){ss=id;document.querySelectorAll('.sty').forEach(e=>e.classList.remove('on'));el.classList.add('on')}
+function tog(el,id,type){
+  const s=type==='r'?sr:sc;
+  if(s.has(id)){s.delete(id);el.classList.remove('on')}else{s.add(id);el.classList.add('on')}
+  updBtn();
+}
+function updBtn(){document.getElementById('goBtn').textContent=`🚀 Gerar ${sr.size*sc.size} Arte${sr.size*sc.size!==1?'s':''}`}
+function allOn(){sr=new Set(R.map(x=>x.id));sc=new Set(C.map(x=>x.id));init()}
+function allOff(){sr.clear();sc.clear();init()}
+
+function prompt(race,cls){
+  const sty=ST.find(s=>s.id===ss);
+  return `Portrait of a ${race.v}, ${cls.v}, ${sty.p}, dark atmospheric background, upper body bust portrait, detailed face, no text no watermark`;
+}
+
+function imgUrl(p,seed){
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=768&height=1024&seed=${seed}&nologo=true&model=flux`;
+}
+
+function gerar(){
+  if(sr.size===0||sc.size===0){alert('Selecione ao menos 1 raça e 1 classe');return}
+  const g=document.getElementById('gallery');
+  g.innerHTML='';
+  let total=0;
+
+  for(const rid of sr){
+    for(const cid of sc){
+      const race=R.find(x=>x.id===rid), cls=C.find(x=>x.id===cid);
+      const p=prompt(race,cls);
+      const seed=Math.floor(Math.random()*999999);
+      const url=imgUrl(p,seed);
+      const key=`${rid}_${cid}`;
+      total++;
+
+      g.innerHTML+=`<div class="card" id="c_${key}">
+        <img src="${url}" alt="${race.n} ${cls.n}"
+          onerror="this.onerror=null;this.style.background='#2a1020';this.alt='Erro - clique Refazer'"
+          onload="loaded('${key}')">
+        <div class="info">${race.i} ${race.n} · ${cls.i} ${cls.n}</div>
+        <div class="acts">
+          <a href="${url}" download="dnd_${key}.png" target="_blank">💾 Salvar</a>
+          <button onclick="redo('${key}','${rid}','${cid}')">🔄 Refazer</button>
+        </div>
+      </div>`;
+    }
+  }
+  document.getElementById('status').innerHTML=`<span class="spin">⏳</span> Gerando ${total} imagens... (cada uma leva ~10-20s)`;
+  window._remaining=total;
+}
+
+function loaded(key){
+  window._remaining--;
+  if(window._remaining<=0){
+    document.getElementById('status').innerHTML='✅ Todas as imagens foram geradas!';
+  } else {
+    document.getElementById('status').innerHTML=`<span class="spin">⏳</span> ${window._remaining} restante${window._remaining>1?'s':''}...`;
+  }
+}
+
+function redo(key,rid,cid){
+  const race=R.find(x=>x.id===rid), cls=C.find(x=>x.id===cid);
+  const p=prompt(race,cls);
+  const seed=Math.floor(Math.random()*999999);
+  const url=imgUrl(p,seed);
+  const card=document.getElementById('c_'+key);
+  const img=card.querySelector('img');
+  img.src=url;
+  // Update download link
+  const a=card.querySelector('a');
+  if(a){a.href=url}
+}
+
+init();
+</script>
+</body>
+</html>
