@@ -3,84 +3,212 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔍 Teste de APIs de Imagem</title>
+<title>🎨 Gerador de Artes D&D — Forja de Heróis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui;background:#12101c;color:#e0d8c8;padding:1.5rem;min-height:100vh}
-h1{text-align:center;color:#d4a830;margin-bottom:1rem}
-p{text-align:center;color:#908070;margin-bottom:2rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
-.test{background:#1e1a2e;border:2px solid #3a3050;border-radius:8px;padding:1rem;text-align:center}
-.test h3{color:#d4a830;font-size:.9rem;margin-bottom:.3rem}
-.test .api{color:#908070;font-size:.75rem;margin-bottom:.8rem;word-break:break-all}
-.test img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:4px;background:#0a0812;display:block}
-.test .status{margin-top:.5rem;padding:.3rem;border-radius:4px;font-size:.8rem;font-weight:700}
-.ok{background:#1a3a18;color:#50a838}
-.fail{background:#3a1818;color:#c04040}
-.loading{background:#2a2818;color:#d4a830}
-.url-box{margin-top:.5rem;font-size:.6rem;color:#605848;word-break:break-all;max-height:60px;overflow:auto}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Crimson Text',serif;background:#12101c;color:#e0d8c8;min-height:100vh;padding:1rem 1rem 3rem}
+h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.3rem,4vw,1.9rem);margin:1rem 0 .3rem;text-shadow:0 0 20px rgba(212,168,48,.3)}
+.sub{text-align:center;color:#908070;font-size:.9rem;margin-bottom:.3rem}
+.badge{text-align:center;margin-bottom:1.5rem}
+.badge span{display:inline-block;padding:.3rem 1rem;border-radius:20px;background:linear-gradient(135deg,#50a838,#2a8018);color:#fff;font-family:'Cinzel',serif;font-size:.65rem;font-weight:700}
+.sec{font-family:'Cinzel',serif;font-size:.8rem;color:#d4a830;margin:1.2rem 0 .5rem;text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-bottom:.8rem}
+.tag{padding:.35rem .7rem;font-family:'Cinzel',serif;font-size:.66rem;border:1.5px solid #3a3050;border-radius:20px;background:#1e1a2e;color:#908070;cursor:pointer;transition:all .25s;user-select:none}
+.tag:hover{border-color:#d4a830;color:#e0d8c8}
+.tag.on{border-color:#d4a830;background:rgba(212,168,48,.15);color:#d4a830}
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.5rem;max-width:600px;margin:0 auto .8rem}
+.sty{padding:.45rem;text-align:center;border:2px solid #3a3050;border-radius:6px;background:#1e1a2e;cursor:pointer;transition:all .3s}
+.sty:hover{border-color:#d4a830}
+.sty.on{border-color:#d4a830;box-shadow:0 0 10px rgba(212,168,48,.3);background:rgba(212,168,48,.1)}
+.sty .si{font-size:1.3rem;display:block;margin-bottom:.1rem}
+.sty .sn{font-family:'Cinzel',serif;font-size:.6rem;color:#d4a830}
+.gen-tags{display:flex;gap:.6rem;justify-content:center;margin-bottom:.8rem}
+.ctrls{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin:1rem 0}
+.btn{padding:.5rem 1.2rem;font-family:'Cinzel',serif;font-size:.75rem;font-weight:700;border:2px solid #3a3050;border-radius:6px;background:#1e1a2e;color:#e0d8c8;cursor:pointer;transition:all .3s}
+.btn:hover{border-color:#d4a830;box-shadow:0 0 10px rgba(212,168,48,.3)}
+.btn.go{background:linear-gradient(135deg,#d4a830,#a88420);color:#111;border-color:#d4a830}
+.btn.go:hover{box-shadow:0 0 20px rgba(212,168,48,.4)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem}
+.card{background:#1e1a2e;border:2px solid #3a3050;border-radius:8px;overflow:hidden;transition:all .3s}
+.card:hover{border-color:#d4a830;box-shadow:0 0 15px rgba(212,168,48,.3);transform:translateY(-2px)}
+.card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#0a0812}
+.card .info{padding:.4rem .5rem;font-family:'Cinzel',serif;font-size:.62rem;color:#d4a830;text-align:center}
+.card .acts{display:flex;gap:.3rem;padding:0 .5rem .4rem;justify-content:center}
+.card .acts a,.card .acts button{padding:.2rem .5rem;font-size:.6rem;font-family:'Cinzel',serif;border:1px solid #3a3050;border-radius:4px;background:#12101c;color:#e0d8c8;cursor:pointer;transition:all .2s;text-decoration:none}
+.card .acts a:hover,.card .acts button:hover{border-color:#d4a830;color:#d4a830}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg{text-align:center;color:#908070;font-size:.85rem;margin:1rem 0;font-style:italic}
+.warn{text-align:center;padding:.6rem;margin:1rem auto;max-width:500px;border-radius:6px;background:#2a2018;border:1px solid #4a3828;color:#d4a830;font-size:.8rem;display:none}
+@media(max-width:600px){.gallery{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.styles{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
-<h1>🔍 Teste de APIs de Imagem Gratuitas</h1>
-<p>Aguarde ~20s para cada teste carregar. Veja qual funciona no seu navegador.</p>
-<div class="grid" id="grid"></div>
+
+<h1>🎨 Gerador de Artes D&D</h1>
+<p class="sub">Retratos de personagem com IA — para a Forja de Heróis</p>
+<div class="badge"><span>✅ 100% GRATUITO — SEM API KEY — SEM LIMITES</span></div>
+
+<div class="warn" id="fileWarn">⚠️ Você está abrindo de arquivo local. Para funcionar, hospede no GitHub Pages ou use um servidor local. <a href="https://github.com" target="_blank" style="color:#d4a830">Saiba mais</a></div>
+
+<div class="sec">🎨 Estilo</div>
+<div class="styles" id="stys"></div>
+
+<div class="sec">👤 Gênero</div>
+<div class="gen-tags" id="genTags">
+  <div class="tag on" onclick="pickGen('male',this)" data-g="male">♂️ Masculino</div>
+  <div class="tag" onclick="pickGen('female',this)" data-g="female">♀️ Feminino</div>
+  <div class="tag" onclick="pickGen('both',this)" data-g="both">⚔️ Ambos</div>
+</div>
+
+<div class="sec">🧬 Raças</div>
+<div class="tags" id="racas"></div>
+
+<div class="sec">⚔️ Classes</div>
+<div class="tags" id="classes"></div>
+
+<div class="ctrls">
+  <button class="btn" onclick="allOn()">✅ Tudo</button>
+  <button class="btn" onclick="allOff()">❌ Limpar</button>
+  <button class="btn go" id="goBtn" onclick="gerar()">🚀 Gerar Artes</button>
+</div>
+
+<div id="status" class="msg"></div>
+<div class="gallery" id="gallery"></div>
 
 <script>
-const prompt = "Portrait of a male elf warrior, fantasy oil painting, dramatic lighting, dark background";
-const encoded = encodeURIComponent(prompt);
+// Warn if running from file://
+if(location.protocol==='file:'){document.getElementById('fileWarn').style.display='block'}
 
-const tests = [
-  {
-    name: "Pollinations (Flux) — v1",
-    url: `https://image.pollinations.ai/prompt/${encoded}?width=512&height=680&seed=42&nologo=true&model=flux`,
-  },
-  {
-    name: "Pollinations (Flux) — v2 sem model",
-    url: `https://image.pollinations.ai/prompt/${encoded}?width=512&height=680&seed=42&nologo=true`,
-  },
-  {
-    name: "Pollinations (Turbo)",
-    url: `https://image.pollinations.ai/prompt/${encoded}?width=512&height=680&seed=42&nologo=true&model=turbo`,
-  },
-  {
-    name: "Pollinations — prompt curto",
-    url: `https://image.pollinations.ai/prompt/elf%20warrior%20fantasy%20portrait%20oil%20painting?width=512&height=680&seed=42&nologo=true`,
-  },
-  {
-    name: "Picsum (teste de conectividade)",
-    url: `https://picsum.photos/512/680?random=1`,
-  },
+const R=[
+  {id:'humano',n:'Humano',i:'🧑',v:'human, fair skin, brown hair, determined expression'},
+  {id:'elfo',n:'Elfo',i:'🧝',v:'elf, elegant, long pointed ears, pale skin, golden long hair, ethereal beauty, almond shaped eyes'},
+  {id:'anao',n:'Anão',i:'⛏️',v:'dwarf, stocky, short and very muscular, thick braided red beard, ruddy skin, broad nose'},
+  {id:'halfling',n:'Halfling',i:'🍀',v:'halfling, small cheerful humanoid, curly brown hair, rosy cheeks, very short stature'},
+  {id:'tiefling',n:'Tiefling',i:'😈',v:'tiefling, reddish-purple skin, curved ram horns, glowing yellow eyes, long pointed tail'},
+  {id:'draconato',n:'Draconato',i:'🐉',v:'dragonborn, dragon-like humanoid face with snout, emerald scaled skin, no hair, muscular, reptilian eyes'},
+  {id:'gnomo',n:'Gnomo',i:'🧙',v:'gnome, tiny humanoid, very large curious bright eyes, wild spiky white hair, big pointed nose'},
+  {id:'meio-elfo',n:'Meio-Elfo',i:'🌿',v:'half-elf, slightly pointed ears, graceful features, hazel eyes, mix of human and elven beauty'},
+  {id:'meio-orc',n:'Meio-Orc',i:'💪',v:'half-orc, green-tinted skin, prominent lower jaw with small tusks, muscular, scarred face'},
+  {id:'orc',n:'Orc',i:'🪓',v:'orc, deep green skin, powerful muscular build, large tusks, tribal red war paint, fierce red eyes'},
+  {id:'aasimar',n:'Aasimar',i:'👼',v:'aasimar, celestial humanoid, glowing golden eyes, radiant luminous pale skin, subtle halo of divine light'},
+  {id:'goliath',n:'Goliath',i:'🏔️',v:'goliath, towering gray-skinned humanoid, completely bald, dark geometric tribal tattoos on face and body'},
+];
+const C=[
+  {id:'barbaro',n:'Bárbaro',i:'🪓',v:'barbarian warrior, fur pelts and leather armor, battle scars, wielding a massive great axe, wild long hair, primal rage aura'},
+  {id:'bardo',n:'Bardo',i:'🎵',v:'bard, elegant colorful Renaissance clothing with feathered hat, carrying an ornate lute, charismatic confident smile'},
+  {id:'clerigo',n:'Clérigo',i:'✝️',v:'cleric, ornate white and gold holy vestments, glowing divine symbol pendant, radiant golden healing light emanating from hands'},
+  {id:'druida',n:'Druida',i:'🌿',v:'druid, robes woven with living green leaves and vines, gnarled wooden staff with glowing emerald crystal, wild untamed hair with flowers'},
+  {id:'guerreiro',n:'Guerreiro',i:'⚔️',v:'fighter warrior, polished full plate steel armor with gold engravings, longsword and kite shield, battle-ready heroic stance'},
+  {id:'monge',n:'Monge',i:'👊',v:'monk, simple flowing orange and brown robes with sash, martial arts combat stance, glowing ki energy around fists'},
+  {id:'paladino',n:'Paladino',i:'🛡️',v:'paladin, shining ornate silver and gold plate armor with holy symbols, radiant holy greatsword, divine golden aura'},
+  {id:'ranger',n:'Ranger',i:'🏹',v:'ranger, worn green and brown leather armor, hooded forest cloak, longbow drawn with arrow, quiver on back, hawk on shoulder'},
+  {id:'ladino',n:'Ladino',i:'🗡️',v:'rogue assassin, dark leather armor with many hidden pockets and buckles, dual daggers, deep hood casting shadows over face'},
+  {id:'feiticeiro',n:'Feiticeiro',i:'✨',v:'sorcerer, arcane blue and purple energy crackling from both hands, flowing enchanted dark robes covered in magical glowing runes'},
+  {id:'bruxo',n:'Bruxo',i:'🔮',v:'warlock, dark tattered purple robes, swirling eldritch green energy, floating ancient grimoire, one glowing otherworldly purple eye'},
+  {id:'mago',n:'Mago',i:'📖',v:'wizard, long ornate dark blue robes with silver stars and moons pattern, tall pointed hat, ancient open spellbook, arcane staff with glowing crystal orb'},
+];
+const ST=[
+  {id:'fantasy',n:'Fantasia',i:'🖼️',p:'epic fantasy oil painting, dramatic cinematic lighting, rich vibrant colors, highly detailed brushstrokes'},
+  {id:'medieval',n:'Medieval',i:'👑',p:'medieval Renaissance portrait painting, classical composition, ornate gold frame feeling, oil on canvas, Rembrandt style lighting'},
+  {id:'dark',n:'Dark Fantasy',i:'🌑',p:'dark fantasy art, moody atmospheric torch lighting, gritty hyper-detailed, grimdark aesthetic'},
+  {id:'anime',n:'Anime',i:'⭐',p:'anime art style, JRPG character portrait, vibrant cel-shading, expressive detailed eyes, colorful'},
+  {id:'watercolor',n:'Aquarela',i:'💧',p:'watercolor painting style, soft wet blending, delicate artistic brush strokes, dreamy ethereal atmosphere'},
+  {id:'comic',n:'Comic',i:'💥',p:'comic book art style, bold ink outlines, dynamic cel-shading, heroic dramatic pose, vivid saturated colors'},
+  {id:'pixel',n:'Pixel Art',i:'👾',p:'detailed pixel art portrait, 32-bit RPG character style, clean defined pixels, retro game aesthetic, vibrant'},
+  {id:'real',n:'Realista',i:'📷',p:'photorealistic fantasy portrait, hyper-detailed skin and material textures, cinematic dramatic lighting, 8K quality render'},
 ];
 
-const grid = document.getElementById('grid');
+let sr=new Set(R.map(x=>x.id)), sc=new Set(C.map(x=>x.id)), ss='fantasy', sg='male';
 
-tests.forEach((t, i) => {
-  const div = document.createElement('div');
-  div.className = 'test';
-  div.innerHTML = `
-    <h3>${t.name}</h3>
-    <div class="status loading" id="s${i}">⏳ Carregando...</div>
-    <img id="img${i}" alt="teste"
-      src="${t.url}"
-      onload="document.getElementById('s${i}').className='status ok';document.getElementById('s${i}').textContent='✅ FUNCIONOU!'"
-      onerror="document.getElementById('s${i}').className='status fail';document.getElementById('s${i}').textContent='❌ FALHOU'"
-    >
-    <div class="url-box">${t.url}</div>
-  `;
-  grid.appendChild(div);
-});
+function init(){
+  document.getElementById('stys').innerHTML=ST.map(s=>`<div class="sty ${s.id===ss?'on':''}" onclick="pickSty('${s.id}',this)"><span class="si">${s.i}</span><span class="sn">${s.n}</span></div>`).join('');
+  document.getElementById('racas').innerHTML=R.map(r=>`<div class="tag ${sr.has(r.id)?'on':''}" onclick="tog(this,'${r.id}','r')">${r.i} ${r.n}</div>`).join('');
+  document.getElementById('classes').innerHTML=C.map(c=>`<div class="tag ${sc.has(c.id)?'on':''}" onclick="tog(this,'${c.id}','c')">${c.i} ${c.n}</div>`).join('');
+  updBtn();
+}
+function pickSty(id,el){ss=id;document.querySelectorAll('.sty').forEach(e=>e.classList.remove('on'));el.classList.add('on')}
+function pickGen(id,el){sg=id;document.querySelectorAll('[data-g]').forEach(e=>e.classList.remove('on'));el.classList.add('on');updBtn()}
+function tog(el,id,type){const s=type==='r'?sr:sc;if(s.has(id)){s.delete(id);el.classList.remove('on')}else{s.add(id);el.classList.add('on')};updBtn()}
+function updBtn(){const m=sg==='both'?2:1;const t=sr.size*sc.size*m;document.getElementById('goBtn').textContent=`🚀 Gerar ${t} Arte${t!==1?'s':''}`}
+function allOn(){sr=new Set(R.map(x=>x.id));sc=new Set(C.map(x=>x.id));init()}
+function allOff(){sr.clear();sc.clear();init()}
 
-// Timeout check after 45s
-setTimeout(() => {
-  tests.forEach((_, i) => {
-    const s = document.getElementById('s' + i);
-    if (s.classList.contains('loading')) {
-      s.className = 'status fail';
-      s.textContent = '⏰ TIMEOUT (45s)';
+function mkPrompt(race,cls,gen){
+  const sty=ST.find(s=>s.id===ss);
+  const g=gen==='female'?'female woman':'male man';
+  return `Portrait of a ${g} ${race.v}, ${cls.v}, ${sty.p}, dark moody atmospheric background, upper body bust shot portrait, highly detailed face and expression, no text no words no watermark, square composition`;
+}
+
+function mkUrl(prompt,seed){
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${seed}&nologo=true`;
+}
+
+function gerar(){
+  if(sr.size===0||sc.size===0){alert('Selecione ao menos 1 raça e 1 classe');return}
+  const gal=document.getElementById('gallery');
+  gal.innerHTML='';
+  const genders=sg==='both'?['male','female']:[sg];
+  const gSym={male:'♂',female:'♀'};
+  const gNome={male:'Masc.',female:'Fem.'};
+  let total=0;
+
+  for(const gen of genders){
+    for(const rid of sr){
+      for(const cid of sc){
+        const race=R.find(x=>x.id===rid), cls=C.find(x=>x.id===cid);
+        const seed=Math.floor(Math.random()*999999);
+        const p=mkPrompt(race,cls,gen);
+        const url=mkUrl(p,seed);
+        const key=`${rid}_${cid}_${gen}`;
+        total++;
+
+        const card=document.createElement('div');
+        card.className='card';
+        card.id='c_'+key;
+        card.innerHTML=`
+          <img src="${url}" alt="${race.n} ${cls.n}"
+            onload="onImg(true)"
+            onerror="this.style.background='#2a1020';this.alt='Erro';onImg(false)">
+          <div class="info">${race.i} ${race.n} · ${cls.i} ${cls.n} · ${gSym[gen]} ${gNome[gen]}</div>
+          <div class="acts">
+            <a href="${url}" download="dnd_${key}.png" target="_blank">💾 Salvar</a>
+            <button onclick="redo('${key}','${rid}','${cid}','${gen}')">🔄 Refazer</button>
+          </div>`;
+        gal.appendChild(card);
+      }
     }
-  });
-}, 45000);
+  }
+  window._rem=total;
+  window._ok=0;
+  window._err=0;
+  document.getElementById('status').innerHTML=`<span class="spin">⏳</span> Gerando ${total} imagens... (cada uma leva ~10-30s, aguarde)`;
+}
+
+function onImg(success){
+  if(success)window._ok++;else window._err++;
+  window._rem--;
+  if(window._rem<=0){
+    document.getElementById('status').innerHTML=`✅ Concluído! ${window._ok} geradas${window._err>0?', '+window._err+' erros':''}`;
+  } else {
+    document.getElementById('status').innerHTML=`<span class="spin">⏳</span> ${window._rem} restante${window._rem>1?'s':''}... (${window._ok} prontas${window._err>0?', '+window._err+' erros':''})`;
+  }
+}
+
+function redo(key,rid,cid,gen){
+  const race=R.find(x=>x.id===rid), cls=C.find(x=>x.id===cid);
+  const seed=Math.floor(Math.random()*999999);
+  const p=mkPrompt(race,cls,gen);
+  const url=mkUrl(p,seed);
+  const card=document.getElementById('c_'+key);
+  const img=card.querySelector('img');
+  img.src=url;
+  const a=card.querySelector('a');
+  if(a)a.href=url;
+}
+
+init();
 </script>
 </body>
 </html>
