@@ -10,12 +10,17 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Crimson Text',serif;background:#12101c;color:#e0d8c8;min-height:100vh;padding:1rem 1rem 3rem}
 h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.3rem,4vw,1.9rem);margin:1rem 0 .3rem;text-shadow:0 0 20px rgba(212,168,48,.3)}
-.sub{text-align:center;color:#908070;font-size:.88rem;margin-bottom:1.2rem}
+.sub{text-align:center;color:#908070;font-size:.85rem;margin-bottom:1rem}
 .sec{font-family:'Cinzel',serif;font-size:.78rem;color:#d4a830;margin:1rem 0 .4rem;text-transform:uppercase;letter-spacing:.06em;text-align:center}
 .tags{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-bottom:.6rem}
 .tag{padding:.3rem .65rem;font-family:'Cinzel',serif;font-size:.64rem;border:1.5px solid #3a3050;border-radius:20px;background:#1e1a2e;color:#908070;cursor:pointer;transition:all .25s;user-select:none}
 .tag:hover{border-color:#d4a830;color:#e0d8c8}
 .tag.on{border-color:#d4a830;background:rgba(212,168,48,.15);color:#d4a830}
+.model-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:0 auto .6rem;max-width:600px}
+.model-opt{padding:.35rem .7rem;font-family:'Cinzel',serif;font-size:.6rem;border:1.5px solid #3a3050;border-radius:6px;background:#1e1a2e;color:#908070;cursor:pointer;transition:all .25s;text-align:center}
+.model-opt:hover{border-color:#d4a830}
+.model-opt.on{border-color:#d4a830;background:rgba(212,168,48,.15);color:#d4a830}
+.model-opt .price{font-size:.5rem;color:#50a838;display:block;margin-top:.1rem}
 .styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.4rem;max-width:550px;margin:0 auto .6rem}
 .sty{padding:.4rem;text-align:center;border:2px solid #3a3050;border-radius:6px;background:#1e1a2e;cursor:pointer;transition:all .3s}
 .sty:hover{border-color:#d4a830}
@@ -33,12 +38,13 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
 .card.now{border-color:#d4a830;box-shadow:0 0 20px rgba(212,168,48,.5)}
 .card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#0a0812}
 .card .ph{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#0a0812;font-size:1.3rem;color:#3a3050;flex-direction:column;gap:.3rem}
-.card .ph small{font-size:.65rem;color:#4a3860}
+.card .ph small{font-size:.6rem;color:#4a3860}
 .card .info{padding:.35rem .5rem;font-family:'Cinzel',serif;font-size:.6rem;color:#d4a830;text-align:center}
 .card .acts{display:flex;gap:.3rem;padding:0 .5rem .4rem;justify-content:center}
 .card .acts button{padding:.2rem .6rem;font-size:.58rem;font-family:'Cinzel',serif;border:1px solid #3a3050;border-radius:4px;background:#12101c;color:#e0d8c8;cursor:pointer;transition:all .2s}
 .card .acts button:hover{border-color:#d4a830;color:#d4a830}
 .msg{text-align:center;color:#908070;font-size:.85rem;margin:1rem 0;font-style:italic}
+.tip{text-align:center;color:#606050;font-size:.7rem;margin:.3rem 0}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;animation:spin 1s linear infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -48,7 +54,11 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
 </head>
 <body>
 <h1>🎨 Gerador de Artes D&D</h1>
-<p class="sub">Retratos com IA · Powered by Puter.js · 100% Gratuito</p>
+<p class="sub">Retratos com IA · Powered by Puter.js</p>
+
+<div class="sec">🤖 Modelo de IA</div>
+<div class="model-row" id="models"></div>
+<p class="tip" id="modelTip"></p>
 
 <div class="sec">🎨 Estilo</div>
 <div class="styles" id="stys"></div>
@@ -72,6 +82,15 @@ h1{font-family:'Cinzel',serif;text-align:center;color:#d4a830;font-size:clamp(1.
 <div class="gallery" id="gallery"></div>
 
 <script>
+// MODELS with pricing info
+const MODELS=[
+  {id:'flux-schnell',n:'Flux Schnell',price:'~$0.003',tip:'Rápido e muito barato. Boa qualidade. ~80 imagens com $0.25',quality:'standard'},
+  {id:'dall-e-3',n:'DALL-E 3',price:'~$0.04',tip:'Melhor qualidade mas caro. ~6 imagens com $0.25',quality:'standard'},
+  {id:'gpt-image-1',n:'GPT Image',price:'~$0.02',tip:'Alta qualidade, custo médio. ~12 imagens com $0.25',quality:'low'},
+  {id:'flux-dev',n:'Flux Dev',price:'~$0.006',tip:'Qualidade intermediária. ~40 imagens com $0.25',quality:'standard'},
+  {id:'stability-core',n:'Stability AI',price:'~$0.01',tip:'Boa qualidade, custo baixo. ~25 imagens com $0.25',quality:'standard'},
+];
+
 const R=[
   {id:'humano',n:'Humano',i:'🧑',v:'human, brown hair, fair skin'},
   {id:'elfo',n:'Elfo',i:'🧝',v:'elf, long pointed ears, golden hair, pale skin'},
@@ -111,14 +130,18 @@ const ST=[
   {id:'real',n:'Realista',i:'📷',p:'photorealistic, cinematic lighting, hyper-detailed, 8K'},
 ];
 
-let sr=new Set(['humano']),sc=new Set(['guerreiro']),ss='fantasy',sg='male',stopFlag=false,running=false;
+let sr=new Set(['humano']),sc=new Set(['guerreiro']),ss='fantasy',sg='male',sm='flux-schnell',stopFlag=false,running=false;
 
 function init(){
+  document.getElementById('models').innerHTML=MODELS.map(m=>`<div class="model-opt ${m.id===sm?'on':''}" onclick="pickModel('${m.id}',this)"><b>${m.n}</b><span class="price">${m.price}/img</span></div>`).join('');
+  updateModelTip();
   document.getElementById('stys').innerHTML=ST.map(s=>`<div class="sty ${s.id===ss?'on':''}" onclick="pickSty('${s.id}',this)"><span class="si">${s.i}</span><span class="sn">${s.n}</span></div>`).join('');
   document.getElementById('racas').innerHTML=R.map(r=>`<div class="tag ${sr.has(r.id)?'on':''}" onclick="tog(this,'${r.id}','r')">${r.i} ${r.n}</div>`).join('');
   document.getElementById('classes').innerHTML=C.map(c=>`<div class="tag ${sc.has(c.id)?'on':''}" onclick="tog(this,'${c.id}','c')">${c.i} ${c.n}</div>`).join('');
   updBtn();
 }
+function pickModel(id,el){sm=id;document.querySelectorAll('.model-opt').forEach(e=>e.classList.remove('on'));el.classList.add('on');updateModelTip()}
+function updateModelTip(){const m=MODELS.find(x=>x.id===sm);document.getElementById('modelTip').textContent=m?m.tip:''}
 function pickSty(id,el){ss=id;document.querySelectorAll('.sty').forEach(e=>e.classList.remove('on'));el.classList.add('on')}
 function pickGen(id,el){sg=id;document.querySelectorAll('[data-g]').forEach(e=>e.classList.remove('on'));el.classList.add('on');updBtn()}
 function tog(el,id,t){const s=t==='r'?sr:sc;s.has(id)?s.delete(id):s.add(id);el.classList.toggle('on');updBtn()}
@@ -129,11 +152,14 @@ function allOff(){sr.clear();sc.clear();init()}
 function mkPrompt(race,cls,gen){
   const sty=ST.find(s=>s.id===ss);
   const g=gen==='female'?'female woman':'male man';
-  return `Portrait of a ${g} ${race.v}, ${cls.v}. ${sty.p}. Dark atmospheric background, upper body bust portrait, highly detailed face. No text, no watermark.`;
+  return `D&D fantasy character portrait: ${g} ${race.v}, ${cls.v}. ${sty.p}. Dark atmospheric background, upper body bust shot, detailed face. No text.`;
 }
 
-async function generateImage(prompt){
-  const imgEl = await puter.ai.txt2img(prompt, {model:'dall-e-3'});
+async function genImg(prompt){
+  const model=MODELS.find(m=>m.id===sm);
+  const opts={model:sm};
+  if(model.quality)opts.quality=model.quality;
+  const imgEl=await puter.ai.txt2img(prompt,opts);
   return imgEl.src;
 }
 
@@ -143,16 +169,13 @@ async function gerar(){
   running=true;stopFlag=false;
   document.getElementById('goBtn').style.display='none';
   document.getElementById('stopBtn').style.display='inline-block';
-
   const gal=document.getElementById('gallery');gal.innerHTML='';
   const gs=sg==='both'?['male','female']:[sg];
   const sym={male:'♂',female:'♀'},nm={male:'Masc.',female:'Fem.'};
-
   const jobs=[];
   for(const gen of gs)for(const rid of sr)for(const cid of sc)
     jobs.push({rid,cid,gen,r:R.find(x=>x.id===rid),c:C.find(x=>x.id===cid)});
 
-  // Create placeholders
   for(const j of jobs){
     const k=`${j.rid}_${j.cid}_${j.gen}`;
     const d=document.createElement('div');d.className='card';d.id='c_'+k;
@@ -169,40 +192,31 @@ async function gerar(){
     const card=document.getElementById('c_'+k);card.classList.add('now');
     const ph=document.getElementById('ph_'+k);
     ph.innerHTML='<span class="spin">🎨</span><small>Gerando...</small>';ph.classList.add('pulsing');
-    document.getElementById('status').innerHTML=`<span class="spin">🎨</span> Gerando ${done+1}/${jobs.length}: ${j.r.n} ${j.c.n} ${sym[j.gen]}...`;
-
+    document.getElementById('status').innerHTML=`<span class="spin">🎨</span> ${done+1}/${jobs.length}: ${j.r.n} ${j.c.n} ${sym[j.gen]} (${sm})`;
     try{
-      const prompt=mkPrompt(j.r,j.c,j.gen);
-      const src=await generateImage(prompt);
-      const img=document.createElement('img');img.src=src;
-      ph.replaceWith(img);
-      ok++;
+      const src=await genImg(mkPrompt(j.r,j.c,j.gen));
+      const img=document.createElement('img');img.src=src;ph.replaceWith(img);ok++;
     }catch(e){
-      console.error(e);
-      ph.classList.remove('pulsing');ph.innerHTML='❌<small>'+e.message?.slice(0,40)+'</small>';ph.style.color='#c04040';
-      er++;
+      console.error(e);ph.classList.remove('pulsing');
+      ph.innerHTML='❌<small>'+(e.message||'erro').slice(0,50)+'</small>';ph.style.color='#c04040';er++;
     }
     card.classList.remove('now');done++;
-    if(!stopFlag&&done<jobs.length)await new Promise(r=>setTimeout(r,1000));
+    if(!stopFlag&&done<jobs.length)await new Promise(r=>setTimeout(r,800));
   }
-
   running=false;
   document.getElementById('goBtn').style.display='inline-block';
   document.getElementById('stopBtn').style.display='none';
-  document.getElementById('status').innerHTML=stopFlag?`⏹ Parado. ${ok}✅ ${er}❌`:`✅ Pronto! ${ok} geradas${er?', '+er+' erros':''}`;
+  document.getElementById('status').innerHTML=stopFlag?`⏹ ${ok}✅ ${er}❌`:`✅ Pronto! ${ok} geradas${er?', '+er+' erros':''}`;
 }
 
 async function redo(rid,cid,gen){
-  const k=`${rid}_${cid}_${gen}`;
-  const r=R.find(x=>x.id===rid),c=C.find(x=>x.id===cid);
+  const k=`${rid}_${cid}_${gen}`,r=R.find(x=>x.id===rid),c=C.find(x=>x.id===cid);
   const card=document.getElementById('c_'+k);
   const old=card.querySelector('img')||card.querySelector('.ph');
-  const ph=document.createElement('div');ph.className='ph pulsing';ph.innerHTML='<span class="spin">🎨</span><small>Gerando...</small>';
+  const ph=document.createElement('div');ph.className='ph pulsing';ph.innerHTML='<span class="spin">🎨</span>';
   old.replaceWith(ph);
-  try{
-    const src=await generateImage(mkPrompt(r,c,gen));
-    const img=document.createElement('img');img.src=src;ph.replaceWith(img);
-  }catch(e){ph.classList.remove('pulsing');ph.innerHTML='❌';ph.style.color='#c04040'}
+  try{const src=await genImg(mkPrompt(r,c,gen));const img=document.createElement('img');img.src=src;ph.replaceWith(img)}
+  catch(e){ph.classList.remove('pulsing');ph.innerHTML='❌';ph.style.color='#c04040'}
 }
 
 init();
