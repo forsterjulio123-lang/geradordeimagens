@@ -2466,7 +2466,7 @@ function applyElement(enemy, element, dmg) {
 function upgradeTower(t) {
   const def = TOWER_DEFS[t.type];
   if(t.level >= def.levels.length) return;
-  const nextDef = def.levels[t.level - 1];
+  const nextDef = def.levels[t.level]; // levels[1] = upgrade para nv2, levels[2] = upgrade para nv3...
   if(!nextDef || !nextDef.upgCost) return;
   if(gold < nextDef.upgCost) return;
   gold -= nextDef.upgCost;
@@ -2474,7 +2474,6 @@ function upgradeTower(t) {
   t.cooldown = 0;
   updateUI();
   if(MP.connected) MP.sendAction('upgrade',{col:t.col,row:t.row,level:t.level,goldAfter:gold});
-  // Nota: NÃO chama closePopups() — deixa o caller decidir
 }
 
 function sellTower(t) {
@@ -3061,16 +3060,45 @@ function startWave() {
   let t=0.5;
   // Infernal: dobra a quantidade de monstros a cada ciclo de 10 ondas
   const cycleN = _isInfernal ? Math.pow(2, Math.floor((waveNum-1)/10)) : 1;
-  for(const {t:tp,n,gap} of waveDef) {
-    const actualN = Math.round(n * cycleN);
-    for(let i=0;i<actualN;i++){ waveQueue.push({type:tp,at:t}); t+=gap; }
+
+  // ── Infernal wave 10+: gaps comprimidos + todos os tipos misturados ──
+  const isHellMode = _isInfernal && waveNum >= 10;
+  if(isHellMode) {
+    const hellCycle = Math.floor((waveNum-1)/10); // 1=wave10-19, 2=wave20-29, ...
+    // Gap entre cada mob decresce por ciclo (mínimo 0.10s)
+    const baseGap = Math.max(0.10, 0.38 * Math.pow(0.72, hellCycle - 1));
+    // Monta pool de todos os mobs dos grupos da wave
+    const pool = [];
+    for(const {t:tp, n} of waveDef) {
+      const actualN = Math.round(n * cycleN);
+      for(let i = 0; i < actualN; i++) pool.push(tp);
+    }
+    // Embaralha aleatoriamente (Fisher-Yates) para misturar tanques com fracos
+    for(let i = pool.length-1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i+1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    // Distribui no tempo com gap comprimido
+    let at = 0.3;
+    for(const type of pool) {
+      waveQueue.push({type, at});
+      at += baseGap;
+    }
+  } else {
+    // Comportamento original (waves 1-9 mesmo no infernal)
+    for(const {t:tp,n,gap} of waveDef) {
+      const actualN = Math.round(n * cycleN);
+      for(let i=0;i<actualN;i++){ waveQueue.push({type:tp,at:t}); t+=gap; }
+    }
   }
+
   waveQueue.sort((a,b)=>a.at-b.at);
   waveTimer=0; waveSpawnIdx=0;
   updateUI();
   const cycle = _isInfernal ? ` — Ciclo ${Math.ceil(waveNum/10)}` : '';
   const spScl = _isInfernal && waveNum>1 ? ` ⚡${Math.round(Math.pow(1.1,Math.floor((waveNum-1)/10))*100)}%spd` : '';
-  showWaveBanner('⚔ ONDA '+waveNum+cycle+spScl);
+  const hellTag = isHellMode ? ' 💀CAOS' : '';
+  showWaveBanner('⚔ ONDA '+waveNum+cycle+spScl+hellTag);
 }
 
 function updateWave(dt) {
@@ -3238,20 +3266,21 @@ function showUpgradeMenu(tower, sx, sy) {
     menu.innerHTML='';
     const def     = TOWER_DEFS[tower.type];
     const lvlDef  = def.levels[tower.level-1];
-    const nextDef = def.levels[tower.level];
-    const canUpgrade = nextDef && gold >= nextDef.upgCost;
+    const nextDef = def.levels[tower.level];           // próximo nível (index = level atual)
+    const canUpgrade = !!(nextDef && nextDef.upgCost && gold >= nextDef.upgCost);
     const el = tower.element ? ELEMENTS[tower.element] : null;
     const sLv=tower.speedLv||0, dLv=tower.damageLv||0;
     const ccLv=tower.critChanceLv||0, cdLv=tower.critDmgLv||0;
     const dmgMult=1+dLv*0.02, speedPct=Math.round(Math.min(sLv*1.2,60));
-    const critPct=ccLv;                          // 1% por nivel
-    const critDmgPct=400+cdLv*3;                 // 400% base + 3%/nivel
+    const critPct=ccLv, critDmgPct=400+cdLv*3;
     const effDmg  = lvlDef.dmg!=null ? Math.round(lvlDef.dmg*dmgMult) : null;
     const effRate = lvlDef.rate!=null ? (lvlDef.rate*(1-speedPct/100)).toFixed(2)+"s" : "—";
-    const _dpsLvB = 1+(tower.damageLv||0)*0.02;
-    const effDpsMin = lvlDef.beamDpsMin!=null ? Math.round(SK.getMageDps(lvlDef.beamDpsMin)*RB.mageDps*_dpsLvB) : null;
-    const effDpsMax = lvlDef.beamDpsMax!=null ? Math.round(SK.getMageDps(lvlDef.beamDpsMax)*RB.mageDps*_dpsLvB) : null;
+    const _dpsB   = 1+dLv*0.02;
+    const effDpsMax = lvlDef.beamDpsMax!=null ? Math.round(SK.getMageDps(lvlDef.beamDpsMax)*RB.mageDps*_dpsB) : null;
     const effRange= SK.getTowerRange(tower.type).toFixed(1);
+    // Preview dos stats no próximo nível
+    const nxtDmg  = nextDef?.dmg!=null  ? Math.round(nextDef.dmg*dmgMult) : null;
+    const nxtRate = nextDef?.rate!=null ? (nextDef.rate*(1-speedPct/100)).toFixed(2)+"s" : null;
     const nextSCost =sLv <UPGRADE_MAX?ELEM_SPEED_COSTS[sLv+1]:0;
     const nextDCost =dLv <UPGRADE_MAX?ELEM_DMG_COSTS[dLv+1]:0;
     const nextCCCost=ccLv<UPGRADE_MAX?ELEM_CRIT_COSTS[ccLv+1]:0;
@@ -3261,139 +3290,165 @@ function showUpgradeMenu(tower, sx, sy) {
     const canCC=ccLv<UPGRADE_MAX&&gold>=nextCCCost;
     const canCD=cdLv<UPGRADE_MAX&&gold>=nextCDCost;
 
-    // Helper: calcula máximo de níveis compráveis com o ouro atual
     const _calcMax=(lv,costs)=>{
       let lvl=lv,g=gold;
       while(lvl<UPGRADE_MAX){const c=costs[lvl+1];if(g<c)break;g-=c;lvl++;}
       return{newLv:lvl,spent:gold-g};
     };
-    const maxS  =_calcMax(sLv, ELEM_SPEED_COSTS);
-    const maxD  =_calcMax(dLv, ELEM_DMG_COSTS);
-    const maxCC =_calcMax(ccLv,ELEM_CRIT_COSTS);
-    const maxCD =_calcMax(cdLv,ELEM_CRITDMG_COSTS);
+    const maxS=_calcMax(sLv,ELEM_SPEED_COSTS), maxD=_calcMax(dLv,ELEM_DMG_COSTS);
+    const maxCC=_calcMax(ccLv,ELEM_CRIT_COSTS), maxCD=_calcMax(cdLv,ELEM_CRITDMG_COSTS);
 
     const card=document.createElement("div");
     card.className="upg-card";
-    card.style.cssText="padding:0;overflow:hidden;min-width:300px;max-width:340px;";
+    card.style.cssText="padding:0;overflow:hidden;min-width:310px;max-width:350px;font-family:'Courier New',monospace;";
 
-    // Stats em linha horizontal compacta
-    const miniStat=(icon,val,col)=>
-      `<div style="display:flex;flex-direction:column;align-items:center;flex:1;padding:5px 2px;gap:1px;">
-        <div style="font-size:9px;color:#4a6070;">${icon}</div>
-        <div style="font-size:15px;font-weight:900;color:${col};line-height:1;font-variant-numeric:tabular-nums;">${val}</div>
-       </div>`;
+    // ── helper: stat com preview do próximo nível ──────────────
+    const statCell=(lbl,cur,nxt,col)=>{
+      const arrow = nxt!=null && nxt!==cur
+        ? `<span style="font-size:9px;color:#4a7090;margin:0 2px;">→</span><span style="font-size:12px;color:#60e890;font-weight:900;">${nxt}</span>`
+        : '';
+      return `<div style="flex:1;text-align:center;padding:5px 3px;">
+        <div style="font-size:8px;color:#4a6070;letter-spacing:.5px;margin-bottom:2px;">${lbl}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0;">
+          <span style="font-size:14px;font-weight:900;color:${col};line-height:1;">${cur}</span>
+          ${arrow}
+        </div>
+      </div>`;
+    };
 
-    const statRow=(icon,lv,effectStr,cost,canBuy,action,maxLv,maxSpent)=>
-      `<div style="display:flex;align-items:center;gap:5px;
-          background:rgba(4,10,20,0.55);border:1px solid #1a3040;border-radius:5px;
-          padding:4px 6px;margin-bottom:3px;min-height:30px;">
-        <div style="${iconCSS(icon,17)}flex-shrink:0;"></div>
-        <span style="font-size:13px;font-weight:bold;color:#c8dce8;flex-shrink:0;">${lv}</span>
-        <span style="font-size:8px;color:#2a4050;flex-shrink:0;">/${UPGRADE_MAX}</span>
-        <span style="font-size:10px;color:#6a9090;flex:1;overflow:hidden;
-          text-overflow:ellipsis;white-space:nowrap;">${effectStr}</span>
-        ${lv<UPGRADE_MAX
-          ?`<div style="display:flex;gap:2px;flex-shrink:0;align-items:center;">
-              <button class="btn ${canBuy?"":"disabled-btn"}" data-action="${action}"
-                style="font-size:10px;padding:3px 7px;white-space:nowrap;min-height:24px;">▲◈${cost}</button>
-              ${maxLv>lv
-                ?`<button class="btn" data-action="${action}-max"
-                    style="font-size:8px;padding:3px 6px;letter-spacing:0;white-space:nowrap;min-height:24px;
-                    background:linear-gradient(180deg,#2a1050,#140828);border-color:#7a40c0;color:#c080ff;">
-                    ⤴MAX</button>`
-                :''}
-             </div>`
-          :`<span style="font-size:10px;color:#40c060;font-weight:bold;flex-shrink:0;">✔MAX</span>`}
-       </div>`;
+    // ── helper: row de atributo com barra de progresso ─────────
+    const attrRow=(icon,lv,label,val,cost,canBuy,action,maxLv,maxSpent)=>{
+      const pct=Math.round((lv/UPGRADE_MAX)*100);
+      const isMax=lv>=UPGRADE_MAX;
+      const barCol = pct>66?'#40e860':pct>33?'#f0c840':'#4a9eff';
+      return `<div style="padding:4px 8px 4px;border-bottom:1px solid #0a1a28;">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+          <div style="${iconCSS(icon,16)}flex-shrink:0;opacity:.85;"></div>
+          <span style="font-size:11px;color:#8aacbc;flex:1;">${label}</span>
+          <span style="font-size:11px;font-weight:bold;color:${isMax?'#40e860':'#c8dce8'};">${val||''}</span>
+          ${isMax
+            ?`<span style="font-size:9px;color:#40e860;font-weight:bold;margin-left:4px;">✔MAX</span>`
+            :`<div style="display:flex;gap:2px;margin-left:4px;">
+                <button class="btn ${canBuy?'':'disabled-btn'}" data-action="${action}"
+                  style="font-size:9px;padding:2px 7px;min-height:22px;white-space:nowrap;">▲◈${cost}</button>
+                ${maxLv>lv?`<button class="btn" data-action="${action}-max"
+                  style="font-size:8px;padding:2px 5px;min-height:22px;white-space:nowrap;
+                  background:linear-gradient(180deg,#1a0838,#0e0420);border-color:#6030a0;color:#b070ff;">⤴</button>`:''}
+              </div>`}
+        </div>
+        <div style="height:3px;background:#0a1520;border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:2px;transition:width .3s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:1px;">
+          <span style="font-size:7px;color:#2a4050;">${lv}/${UPGRADE_MAX}</span>
+          ${!isMax&&maxLv>lv?`<span style="font-size:7px;color:#6030a0;">MAX◈${maxSpent}</span>`:''}
+        </div>
+      </div>`;
+    };
 
+    // ── tracker de nível (bolinha por nível disponível) ────────
+    const totalLvls = def.levels.length;
+    const lvlDots = Array.from({length:totalLvls},(_,i)=>{
+      const filled=i<tower.level, isCurrent=i===tower.level-1, isNext=i===tower.level;
+      const c=filled?'#4a9eff':isNext&&nextDef?'#1a3050':'#0e1e2e';
+      const border=isCurrent?'#4a9eff':isNext&&nextDef?'#2a5070':'#1a2a3a';
+      return `<div style="width:10px;height:10px;border-radius:50%;background:${c};border:1.5px solid ${border};
+        ${isCurrent?'box-shadow:0 0 6px #4a9eff88;':''}"></div>`;
+    }).join('<div style="flex:1;height:1px;background:#0e1e2e;margin-top:4px;"></div>');
+
+    // ── grid de elementos ──────────────────────────────────────
     let elemGrid="";
     for(const [key,e2] of Object.entries(ELEMENTS)){
       const active=tower.element===key, canBuy2=!active&&gold>=500;
-      elemGrid+=`<button data-action="elem" data-elem="${key}"
-        title="${e2.name}"
-        style="cursor:${active||canBuy2?"pointer":"default"};padding:4px 2px;border-radius:4px;
-          text-align:center;border:2px solid ${active?e2.color:"#1e3040"};
-          background:${active?e2.color+"20":"rgba(4,10,18,0.85)"};
-          box-shadow:${active?`0 0 10px ${e2.color}50`:"none"};
-          opacity:${active||canBuy2?1:0.35};transition:all .15s;">
-        <div style="${iconCSS(e2.icon,24)}margin:0 auto;${active?`filter:drop-shadow(0 0 5px ${e2.color});`:""}"></div>
-        <div style="font-size:7.5px;color:${active?e2.color:"#3a5070"};margin-top:1px;
-          font-weight:${active?"bold":"normal"};">${e2.name}</div>
+      elemGrid+=`<button data-action="elem" data-elem="${key}" title="${e2.name}"
+        style="cursor:${active||canBuy2?'pointer':'default'};padding:3px 2px;border-radius:4px;
+          text-align:center;border:2px solid ${active?e2.color:'#1a2e40'};
+          background:${active?e2.color+'18':'rgba(4,8,16,0.8)'};
+          box-shadow:${active?`0 0 8px ${e2.color}40`:'none'};
+          opacity:${active||canBuy2?1:0.3};transition:all .15s;">
+        <div style="${iconCSS(e2.icon,22)}margin:0 auto;${active?`filter:drop-shadow(0 0 4px ${e2.color});`:''}"></div>
+        <div style="font-size:7px;color:${active?e2.color:'#3a5060'};margin-top:1px;font-weight:${active?'bold':'normal'};">${e2.name}</div>
       </button>`;
     }
 
-    const upgradeBtnHTML = !nextDef
-      ? `<div style="font-size:11px;color:#40e860;text-align:center;padding:6px;
-            background:rgba(16,50,16,0.35);border:1px solid #2a6a2a;
-            border-radius:5px;font-weight:bold;letter-spacing:2px;">★ NÍVEL MÁXIMO</div>`
-      : `<button class="btn btn-up ${canUpgrade?"":"disabled-btn"}" data-action="upg"
-            style="width:100%;font-size:12px;padding:7px 4px;letter-spacing:0.5px;min-height:34px;">
-            ▲ Upgrade Nv.${tower.level+1} — ◈${nextDef.upgCost}</button>`;
-
+    // ── monta o card ───────────────────────────────────────────
     card.innerHTML=`
-      <!-- HEADER: nome + nível + botão X -->
+      <!-- HEADER -->
       <div style="display:flex;align-items:center;justify-content:space-between;
-          padding:8px 10px 7px;border-bottom:1px solid #0e2030;background:rgba(2,8,18,0.85);">
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${el?`<div style="${iconCSS(el.icon,16)}filter:drop-shadow(0 0 5px ${el.color});"></div>`:""}
-          <div>
-            <span style="font-size:14px;font-weight:bold;color:#d8eeff;letter-spacing:0.5px;">${def.name}</span>
-            <span style="font-size:10px;color:#3a7090;margin-left:6px;letter-spacing:2px;font-weight:bold;">NÍV ${tower.level}</span>
-          </div>
+          padding:7px 10px 6px;border-bottom:1px solid #0e1e2e;background:rgba(2,6,16,0.9);">
+        <div style="display:flex;align-items:center;gap:7px;">
+          ${el?`<div style="${iconCSS(el.icon,15)}filter:drop-shadow(0 0 4px ${el.color});flex-shrink:0;"></div>`:''}
+          <span style="font-size:14px;font-weight:bold;color:#d8eeff;">${def.name}</span>
+          <span style="font-size:9px;color:#3a7090;letter-spacing:2px;font-weight:bold;background:rgba(30,60,100,.3);
+            padding:1px 6px;border-radius:10px;border:1px solid #1a3a60;">NÍV ${tower.level}</span>
         </div>
-        <button data-action="close-btn"
-          style="font-size:14px;color:#4a7090;background:none;border:none;cursor:pointer;
-            padding:2px 6px;border-radius:3px;font-family:inherit;line-height:1;
-            transition:color .15s;" onmouseover="this.style.color='#e07070'" onmouseout="this.style.color='#4a7090'">✕</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <!-- tracker de nível -->
+          <div style="display:flex;align-items:center;gap:3px;">${lvlDots}</div>
+          <button data-action="close-btn"
+            style="font-size:13px;color:#3a6080;background:none;border:none;cursor:pointer;
+              padding:1px 5px;line-height:1;transition:color .15s;"
+            onmouseover="this.style.color='#e07070'" onmouseout="this.style.color='#3a6080'">✕</button>
+        </div>
       </div>
 
-      <!-- STATS em linha horizontal -->
-      <div style="display:flex;border-bottom:1px solid #0e1e2e;background:rgba(2,6,14,0.5);">
-        ${miniStat("⚔ DANO", effDmg!=null?effDmg:effDpsMax!=null?effDpsMax+"/s":"—", effDmg!=null?"#f0c870":"#c060ff")}
-        <div style="width:1px;background:#0e1e2e;"></div>
-        ${miniStat("⏱ TAXA", effRate, "#80d0f0")}
-        <div style="width:1px;background:#0e1e2e;"></div>
-        ${miniStat("📏 ALCAN", effRange, "#70d080")}
-        <div style="width:1px;background:#0e1e2e;"></div>
-        ${miniStat("💎 CRIT", ccLv>0?critPct+"%":"—", ccLv>0?"#ff8040":"#3a5060")}
+      <!-- STATS com preview do próximo nível -->
+      <div style="display:flex;border-bottom:1px solid #0a1820;background:rgba(2,5,12,0.6);">
+        ${statCell("⚔ DANO", effDmg!=null?effDmg:(effDpsMax!=null?effDpsMax+'/s':'—'), nxtDmg, effDmg!=null?'#f0c870':'#c060ff')}
+        <div style="width:1px;background:#0a1820;"></div>
+        ${statCell("⏱ TAXA", effRate, nxtRate, "#7accf0")}
+        <div style="width:1px;background:#0a1820;"></div>
+        ${statCell("📏 ALCAN", effRange, null, "#60c870")}
+        <div style="width:1px;background:#0a1820;"></div>
+        ${statCell("💎 CRIT", ccLv>0?critPct+'%':'—', null, ccLv>0?'#ff8040':'#2a4050')}
       </div>
 
-      <!-- CORPO: upgrade + melhorias + elementos + vender -->
-      <div style="padding:8px 8px 6px;">
-        <!-- Botão upgrade principal -->
-        <div style="margin-bottom:7px;">${upgradeBtnHTML}</div>
+      <!-- BOTÃO UPGRADE PRINCIPAL -->
+      <div style="padding:7px 8px 5px;">
+        ${!nextDef
+          ?`<div style="text-align:center;padding:6px;background:rgba(16,50,16,0.4);
+              border:1px solid #2a6a2a;border-radius:5px;font-size:11px;color:#40e860;
+              font-weight:bold;letter-spacing:2px;">★ NÍVEL MÁXIMO</div>`
+          :`<button class="btn btn-up ${canUpgrade?'':'disabled-btn'}" data-action="upg"
+              style="width:100%;font-size:12px;padding:7px 4px;min-height:34px;letter-spacing:.5px;
+              ${canUpgrade?'box-shadow:0 0 12px rgba(60,200,80,.25);':''}">
+              ▲ Upgrade Nv.${tower.level+1}
+              <span style="margin-left:8px;opacity:.8;">◈${nextDef.upgCost}</span>
+              ${canUpgrade?`<span style="margin-left:6px;font-size:9px;color:#a0f0b0;">(ouro suficiente)</span>`:`<span style="margin-left:6px;font-size:9px;color:#f08080;">faltam ◈${nextDef.upgCost-gold}</span>`}
+            </button>`}
+      </div>
 
-        <!-- Melhorias de atributos -->
-        ${statRow("boot",  sLv,  sLv>0?`-${speedPct}% vel`:"velocidade",       nextSCost, canS,  "speed",     maxS.newLv,  maxS.spent)}
-        ${statRow("sword", dLv,  dLv>0?`+${Math.round(dLv*2)}% dmg`:"dano",    nextDCost, canD,  "dmg",       maxD.newLv,  maxD.spent)}
-        ${statRow("gem_red",  ccLv, ccLv>0?`${critPct}% chance crit`:"chance crítico", nextCCCost, canCC,"critchance", maxCC.newLv, maxCC.spent)}
-        ${statRow("gem_gold", cdLv, cdLv>0?`${critDmgPct}% dano crit`:"dano crítico",  nextCDCost, canCD,"critdmg",   maxCD.newLv, maxCD.spent)}
+      <!-- MELHORIAS DE ATRIBUTOS -->
+      <div style="border-top:1px solid #0a1820;">
+        ${attrRow("boot",  sLv, "velocidade",   sLv>0?`-${speedPct}% ataque`:'',  nextSCost, canS,  "speed",     maxS.newLv,  maxS.spent)}
+        ${attrRow("sword", dLv, "dano",         dLv>0?`+${Math.round(dLv*2)}% dmg`:'', nextDCost, canD, "dmg",  maxD.newLv,  maxD.spent)}
+        ${attrRow("gem_red",  ccLv, "chance crítico", ccLv>0?`${critPct}% chance`:'',  nextCCCost, canCC, "critchance", maxCC.newLv, maxCC.spent)}
+        ${attrRow("gem_gold", cdLv, "dano crítico",   cdLv>0?`${critDmgPct}% dano`:'', nextCDCost, canCD, "critdmg",   maxCD.newLv, maxCD.spent)}
+      </div>
 
-        <!-- Elementos -->
-        <div style="border-top:1px solid #1a3040;padding-top:6px;margin-top:5px;">
-          <div style="font-size:9px;color:#4a7090;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;">
-            🌟 Elemento &nbsp;<span style="color:#4a6a40;font-weight:bold;">◈500</span>
-            ${el?`<button data-action="elem" data-elem=""
-              style="float:right;font-size:9px;padding:1px 6px;border-radius:3px;cursor:pointer;
-                border:1px solid #5a1a1a;color:#e05050;background:rgba(24,6,6,0.8);">✕ remover</button>`:""}
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:${el?5:0}px;">
-            ${elemGrid}
-          </div>
-          ${el?`<div style="font-size:9px;color:${el.color};opacity:.85;line-height:1.3;margin-top:2px;">${el.desc}</div>`:""}
+      <!-- ELEMENTOS -->
+      <div style="padding:5px 8px 4px;border-top:1px solid #0a1820;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:9px;color:#3a6080;letter-spacing:1px;text-transform:uppercase;">🌟 Elemento ◈500</span>
+          ${el?`<button data-action="elem" data-elem=""
+            style="font-size:8px;padding:1px 7px;border-radius:3px;cursor:pointer;
+              border:1px solid #5a1a1a;color:#e05050;background:rgba(20,4,4,.8);">✕ remover</button>`:''}
         </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">${elemGrid}</div>
+        ${el?`<div style="margin-top:4px;font-size:8.5px;color:${el.color};opacity:.8;line-height:1.35;">${el.desc}</div>`:''}
+      </div>
 
-        <!-- Vender -->
-        <button data-action="sell" style="margin-top:7px;width:100%;padding:6px 4px;border-radius:6px;
-          cursor:pointer;border:1px solid #6a1a1a;background:rgba(60,12,12,0.7);
-          color:#e87070;font-size:10px;font-family:inherit;transition:all .15s;">
+      <!-- VENDER -->
+      <div style="padding:5px 8px 7px;">
+        <button data-action="sell"
+          style="width:100%;padding:6px 4px;border-radius:5px;cursor:pointer;
+            border:1px solid #5a1818;background:rgba(50,10,10,.75);
+            color:#e87070;font-size:10px;font-family:inherit;transition:all .15s;">
           ◈ Vender &nbsp;<b style="font-size:13px;color:#ff8080;">+${lvlDef.sell}</b>
         </button>
       </div>`;
 
-
-    // Após qualquer ação, rebuild() já reconstrói tudo — overlay mobile removido
-    const _refreshMobOverlay = () => {}; // no-op mantido por compatibilidade
+    const _refreshMobOverlay = () => {};
 
     card.addEventListener("click", ev => {
       ev.stopPropagation();
@@ -3401,30 +3456,28 @@ function showUpgradeMenu(tower, sx, sy) {
       if(!btn) return;
       const act=btn.dataset.action;
       if(act==="close-btn"){closePopups();return;}
-      if(act==="upg"&&canUpgrade){upgradeTower(tower);rebuild();setTimeout(_refreshMobOverlay,50);}
-      else if(act==="speed"    &&canS) {gold-=nextSCost;  tower.speedLv      =sLv+1;  updateUI();rebuild();}
-      else if(act==="dmg"      &&canD) {gold-=nextDCost;  tower.damageLv     =dLv+1;  updateUI();rebuild();}
+      if(act==="upg"&&canUpgrade){upgradeTower(tower);rebuild();}
+      else if(act==="speed"     &&canS) {gold-=nextSCost;  tower.speedLv      =sLv+1;  updateUI();rebuild();}
+      else if(act==="dmg"       &&canD) {gold-=nextDCost;  tower.damageLv     =dLv+1;  updateUI();rebuild();}
       else if(act==="critchance"&&canCC){gold-=nextCCCost; tower.critChanceLv =ccLv+1; updateUI();rebuild();}
-      else if(act==="critdmg"  &&canCD){gold-=nextCDCost;  tower.critDmgLv    =cdLv+1; updateUI();rebuild();}
-      else if(act==="speed-max")    {const m=_calcMax(tower.speedLv||0,    ELEM_SPEED_COSTS);  if(m.spent>0){gold-=m.spent;tower.speedLv      =m.newLv;updateUI();rebuild();}}
-      else if(act==="dmg-max")      {const m=_calcMax(tower.damageLv||0,   ELEM_DMG_COSTS);    if(m.spent>0){gold-=m.spent;tower.damageLv     =m.newLv;updateUI();rebuild();}}
-      else if(act==="critchance-max"){const m=_calcMax(tower.critChanceLv||0,ELEM_CRIT_COSTS);  if(m.spent>0){gold-=m.spent;tower.critChanceLv =m.newLv;updateUI();rebuild();}}
-      else if(act==="critdmg-max")  {const m=_calcMax(tower.critDmgLv||0,  ELEM_CRITDMG_COSTS);if(m.spent>0){gold-=m.spent;tower.critDmgLv    =m.newLv;updateUI();rebuild();}}
-      else if(act==="sell"){sellTower(tower);}
+      else if(act==="critdmg"   &&canCD){gold-=nextCDCost; tower.critDmgLv    =cdLv+1; updateUI();rebuild();}
+      else if(act==="speed-max")     {const m=_calcMax(tower.speedLv||0,     ELEM_SPEED_COSTS);   if(m.spent>0){gold-=m.spent;tower.speedLv      =m.newLv;updateUI();rebuild();}}
+      else if(act==="dmg-max")       {const m=_calcMax(tower.damageLv||0,    ELEM_DMG_COSTS);     if(m.spent>0){gold-=m.spent;tower.damageLv     =m.newLv;updateUI();rebuild();}}
+      else if(act==="critchance-max"){const m=_calcMax(tower.critChanceLv||0, ELEM_CRIT_COSTS);   if(m.spent>0){gold-=m.spent;tower.critChanceLv =m.newLv;updateUI();rebuild();}}
+      else if(act==="critdmg-max")   {const m=_calcMax(tower.critDmgLv||0,   ELEM_CRITDMG_COSTS);if(m.spent>0){gold-=m.spent;tower.critDmgLv    =m.newLv;updateUI();rebuild();}}
+      else if(act==="sell"){sellTower(tower);return;}
       else if(act==="elem"){
         const newElem=btn.dataset.elem||null;
-        if(newElem&&newElem!==tower.element){
-          if(gold<500)return;
-          gold-=500;tower.element=newElem;updateUI();
-        } else if(!newElem){tower.element=null;}
+        if(newElem&&newElem!==tower.element){if(gold<500)return;gold-=500;tower.element=newElem;updateUI();}
+        else if(!newElem){tower.element=null;}
         rebuild();
       }
-      // MP sync após QUALQUER ação (elem agora já aplicado)
       if(MP.connected && ["speed","dmg","critchance","critdmg","elem",
           "speed-max","dmg-max","critchance-max","critdmg-max"].includes(act)) {
         MP.sendAction("tower_sync",{col:tower.col,row:tower.row,
-          speedLv:tower.speedLv,damageLv:tower.damageLv,critChanceLv:tower.critChanceLv,
-          critDmgLv:tower.critDmgLv,element:tower.element,goldAfter:gold});
+          speedLv:tower.speedLv,damageLv:tower.damageLv,
+          critChanceLv:tower.critChanceLv,critDmgLv:tower.critDmgLv,
+          element:tower.element,goldAfter:gold});
       }
     });
     menu.appendChild(card);
@@ -4589,23 +4642,51 @@ const MP = {
   },
 
   _applyAction(action, d) {
+    // Sincroniza gold quando outra ação remota tem goldAfter
+    const _syncGold = () => {
+      if(d.goldAfter !== undefined && d.goldAfter >= 0) gold = d.goldAfter;
+      updateUI();
+    };
+    // Rebuild menu se torre selecionada foi afetada
+    const _rebuildIfSelected = (col, row) => {
+      if(selectedTower && selectedTower.col===col && selectedTower.row===row) {
+        const menu = document.getElementById('upgradeMenu');
+        if(menu && !menu.classList.contains('hidden') && typeof showUpgradeMenu==='function') {
+          const cRect = canvas.getBoundingClientRect();
+          showUpgradeMenu(selectedTower,
+            parseFloat(menu.style.left) || cRect.width/2,
+            parseFloat(menu.style.top)  || cRect.height/2);
+        }
+      }
+    };
     switch(action) {
       case 'place':
-        if(!towerGrid[d.row][d.col]) { _mpPlaceTowerSilent(d.col,d.row,d.type,'remote'); updateUI(); }
+        if(!towerGrid[d.row][d.col]) { _mpPlaceTowerSilent(d.col,d.row,d.type,'remote'); }
+        _syncGold();
         break;
       case 'upgrade': {
         const t=towers.find(t=>t.col===d.col&&t.row===d.row);
-        if(t){t.level=d.level; updateUI();}
+        if(t){ t.level=d.level; _syncGold(); _rebuildIfSelected(d.col,d.row); }
         break;
       }
       case 'sell': {
         const t=towers.find(t=>t.col===d.col&&t.row===d.row);
-        if(t){towerGrid[t.row][t.col]=null;towers=towers.filter(x=>x!==t);updateUI();}
+        if(t){
+          towerGrid[t.row][t.col]=null; towers=towers.filter(x=>x!==t);
+          if(selectedTower===t){ selectedTower=null; closePopups(); }
+          _syncGold();
+        }
         break;
       }
       case 'tower_sync': {
         const t=towers.find(t=>t.col===d.col&&t.row===d.row);
-        if(t){t.speedLv=d.speedLv;t.damageLv=d.damageLv;t.critChanceLv=d.critChanceLv;t.critDmgLv=d.critDmgLv;t.element=d.element;updateUI();}
+        if(t){
+          t.speedLv=d.speedLv; t.damageLv=d.damageLv;
+          t.critChanceLv=d.critChanceLv; t.critDmgLv=d.critDmgLv;
+          t.element=d.element;
+          _syncGold();
+          _rebuildIfSelected(d.col,d.row);
+        }
         break;
       }
       case 'wave_request': if(this.isHost) startWave(); break;
